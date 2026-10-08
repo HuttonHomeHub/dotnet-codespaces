@@ -124,7 +124,7 @@ jobs:
           deploy/write-env.sh deploy/out \
             "$REGISTRY/huttonhomehub/photomapper-apiservice@$API_DIGEST" \
             "$REGISTRY/huttonhomehub/photomapper-web@$WEB_DIGEST"
-          { echo '### Deployment bundle `.env`'; echo '```'; cat deploy/out/.env; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo "### Deployment bundle .env"; echo '```'; cat deploy/out/.env; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload deployment bundle
         if: ${{ env.PUBLISH == 'true' }}
