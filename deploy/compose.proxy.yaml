@@ -1,0 +1,25 @@
+# Layered over the Aspire-generated docker-compose.yaml (see README.md). Caddy terminates HTTPS, obtaining and
+# renewing certificates automatically for SITE_ADDRESS, and is the only service published on the host.
+services:
+  proxy:
+    image: caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+    restart: unless-stopped
+    ports:
+      - "${PROXY_HTTP_PORT:-80}:80"
+      - "${PROXY_HTTPS_PORT:-443}:443"
+      - "${PROXY_HTTPS_PORT:-443}:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS in site.env}
+      WEB_UPSTREAM: webfrontend:${WEBFRONTEND_PORT}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - aspire
+    depends_on:
+      - webfrontend
+
+volumes:
+  caddy_data:
+  caddy_config:

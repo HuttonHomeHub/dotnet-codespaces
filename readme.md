@@ -46,3 +46,5 @@ dotnet format PhotoMapper.slnx
 ```
 
 CI runs the formatting check, build and tests on every push and pull request to `main`, plus CodeQL and dependency review. Changes reach `main` only through pull requests.
+
+Every pull request also builds the container images and smoke-tests the production Docker Compose stack; every merge to `main` publishes the images to GHCR and a deployment bundle. See [deploy/README.md](deploy/README.md).

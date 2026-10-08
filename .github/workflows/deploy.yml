@@ -1,0 +1,137 @@
+name: Containers
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  ASPIRE_CLI_VERSION: 13.6.1
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  REGISTRY: ghcr.io
+  # Only pushes to main publish images and the deployment bundle; pull requests build and smoke-test them.
+  PUBLISH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+
+jobs:
+  containers:
+    name: Build, smoke-test and publish images
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
+
+      - name: Install Aspire CLI
+        run: dotnet tool install -g Aspire.Cli --version "$ASPIRE_CLI_VERSION"
+
+      - name: Build container images
+        run: |
+          for project in ApiService Web; do
+            dotnet publish "src/PhotoMapper.$project" --configuration Release -t:PublishContainer -p:ContainerImageTags=ci
+          done
+
+      - name: Generate Compose bundle
+        run: |
+          aspire publish --output-path deploy/out --non-interactive --nologo
+          cp deploy/compose.proxy.yaml deploy/Caddyfile deploy/site.env.example deploy/README.md deploy/out/
+          deploy/write-env.sh deploy/out huttonhomehub/photomapper-apiservice:ci huttonhomehub/photomapper-web:ci
+
+      - name: Smoke test
+        run: deploy/smoke-test.sh deploy/out
+
+      - name: Upload smoke test logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: smoke-test-logs
+          path: deploy/out/smoke.log
+
+      - name: Log in to GitHub Container Registry
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Push exactly the images that passed the smoke test, tagged with the commit and "latest".
+      - name: Push images
+        id: push
+        if: ${{ env.PUBLISH == 'true' }}
+        run: |
+          for name in apiservice web; do
+            local_image="huttonhomehub/photomapper-$name:ci"
+            remote="$REGISTRY/huttonhomehub/photomapper-$name"
+            docker tag "$local_image" "$remote:sha-$GITHUB_SHA"
+            docker tag "$local_image" "$remote:latest"
+            docker push --quiet "$remote:sha-$GITHUB_SHA"
+            docker push --quiet "$remote:latest"
+            digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$remote:sha-$GITHUB_SHA" | cut -d@ -f2)
+            echo "$name-digest=$digest" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Attest apiservice image provenance
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/huttonhomehub/photomapper-apiservice
+          subject-digest: ${{ steps.push.outputs.apiservice-digest }}
+          push-to-registry: true
+
+      - name: Attest web image provenance
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/huttonhomehub/photomapper-web
+          subject-digest: ${{ steps.push.outputs.web-digest }}
+          push-to-registry: true
+
+      # The bundle's .env pins the pushed images by digest, so a deployment is exactly this commit.
+      - name: Pin bundle to pushed images
+        if: ${{ env.PUBLISH == 'true' }}
+        env:
+          API_DIGEST: ${{ steps.push.outputs.apiservice-digest }}
+          WEB_DIGEST: ${{ steps.push.outputs.web-digest }}
+        run: |
+          rm -f deploy/out/smoke.log
+          deploy/write-env.sh deploy/out \
+            "$REGISTRY/huttonhomehub/photomapper-apiservice@$API_DIGEST" \
+            "$REGISTRY/huttonhomehub/photomapper-web@$WEB_DIGEST"
+          { echo "### Deployment bundle .env"; echo '```'; cat deploy/out/.env; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload deployment bundle
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: deploy-bundle-${{ github.sha }}
+          path: deploy/out
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90

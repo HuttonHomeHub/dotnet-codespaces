@@ -1,0 +1,14 @@
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	# Blazor Server's WebSocket connection is proxied as-is. The app sees the original scheme and client IP
+	# through X-Forwarded-* (ASPNETCORE_FORWARDEDHEADERS_ENABLED is set in the generated compose file).
+	reverse_proxy {$WEB_UPSTREAM}
+}

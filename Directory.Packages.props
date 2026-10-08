@@ -4,6 +4,10 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
+  <ItemGroup Label="AppHost">
+    <PackageVersion Include="Aspire.Hosting.Docker" Version="13.6.1" />
+  </ItemGroup>
+
   <ItemGroup Label="ApiService">
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.17.14" />
