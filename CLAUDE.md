@@ -28,7 +28,7 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 
 ## Build conventions
 
-- Target framework, nullable, implicit usings and `TreatWarningsAsErrors` live in `Directory.Build.props`; don't repeat them in `.csproj` files.
+- Target framework, nullable, implicit usings, `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended` and `EnforceCodeStyleInBuild` live in `Directory.Build.props`; don't repeat them in `.csproj` files. Together these make `.editorconfig` rules set to `warning` (and recommended CA rules) fail the build.
 - Package versions are central in `Directory.Packages.props`; `PackageReference` items have no `Version`.
 - The Aspire version (13.6.1) appears in four places that must move together: the `Aspire.AppHost.Sdk/<version>` in the AppHost `.csproj`, `Aspire.Hosting.Testing` in `Directory.Packages.props`, the Aspire CLI install in `.devcontainer/devcontainer.json`, and `ASPIRE_CLI_VERSION` in `.github/workflows/build.yml`.
 - The AppHost uses `AspireUseCliBundle=true`, so builds of the AppHost need the Aspire CLI (`aspire`) on PATH (the container adds `~/.dotnet/tools`).
