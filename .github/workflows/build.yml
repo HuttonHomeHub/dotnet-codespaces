@@ -19,6 +19,7 @@ env:
   ASPIRE_CLI_VERSION: 13.6.1
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  MIN_LINE_COVERAGE: 80
 
 jobs:
   build:
@@ -57,6 +58,15 @@ jobs:
         run: >-
           dotnet test --solution PhotoMapper.slnx --no-build --configuration Release
           --results-directory "$GITHUB_WORKSPACE/TestResults" --report-xunit-trx
+          --coverage --coverage-output-format cobertura --coverage-settings tests/coverage.config
+
+      - name: Coverage report
+        if: ${{ !cancelled() }}
+        run: |
+          dotnet tool restore
+          dotnet tool run reportgenerator -reports:"TestResults/*.cobertura.xml" -targetdir:TestResults/coverage \
+            -reporttypes:"Cobertura;MarkdownSummaryGithub;HtmlInline"
+          cat TestResults/coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload test results
         if: ${{ !cancelled() }}
@@ -65,3 +75,11 @@ jobs:
           name: test-results
           path: TestResults
           if-no-files-found: error
+
+      - name: Enforce minimum line coverage
+        run: |
+          rate=$(grep -oP '<coverage line-rate="\K[0-9.]+' TestResults/coverage/Cobertura.xml)
+          percent=$(awk -v r="$rate" 'BEGIN { printf "%.1f", r * 100 }')
+          echo "Line coverage: ${percent}% (minimum ${MIN_LINE_COVERAGE}%)"
+          awk -v p="$percent" -v m="$MIN_LINE_COVERAGE" 'BEGIN { exit !(p >= m) }' \
+            || { echo "::error::Line coverage ${percent}% is below the ${MIN_LINE_COVERAGE}% minimum."; exit 1; }

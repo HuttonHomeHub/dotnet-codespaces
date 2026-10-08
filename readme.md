@@ -34,6 +34,7 @@ src/
   PhotoMapper.Web/              Blazor Web App (interactive server rendering)
 tests/
   PhotoMapper.IntegrationTests/ xUnit v3 tests that start the whole app once via the AppHost
+  PhotoMapper.Web.Tests/        bUnit unit tests for the Blazor components
 ```
 
 ## Build, test, format
