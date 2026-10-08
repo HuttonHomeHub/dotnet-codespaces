@@ -1,3 +1,4 @@
 {
-    "dotnet.defaultSolution": "PhotoMapper.slnx"
+    "dotnet.defaultSolution": "PhotoMapper.slnx",
+    "dotnet.testWindow.useTestingPlatformProtocol": true
 }
