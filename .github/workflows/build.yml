@@ -11,26 +11,39 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   ASPIRE_CLI_VERSION: 13.6.1
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: "**/packages.lock.json"
 
       - name: Install Aspire CLI
-        run: dotnet tool install -g Aspire.Cli --version $ASPIRE_CLI_VERSION
+        run: dotnet tool install -g Aspire.Cli --version "$ASPIRE_CLI_VERSION"
 
+      # Directory.Build.props turns on RestoreLockedMode under GitHub Actions, so this fails if a
+      # packages.lock.json is stale.
       - name: Restore dependencies
         run: dotnet restore PhotoMapper.slnx
 

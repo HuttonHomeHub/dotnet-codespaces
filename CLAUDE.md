@@ -30,6 +30,13 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 
 - Target framework, nullable, implicit usings, `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended` and `EnforceCodeStyleInBuild` live in `Directory.Build.props`; don't repeat them in `.csproj` files. Together these make `.editorconfig` rules set to `warning` (and recommended CA rules) fail the build.
 - Package versions are central in `Directory.Packages.props`; `PackageReference` items have no `Version`.
+- Every project has a committed `packages.lock.json`. After changing a package, run `dotnet restore PhotoMapper.slnx` and commit the updated lock files; CI restores in locked mode (set in `Directory.Build.props` when `GITHUB_ACTIONS` is true) and fails on drift. NuGet audit fails restore on any known-vulnerable package, transitive ones included.
+- `nuget.config` restricts restore to nuget.org via package source mapping; adding another feed means adding a source and a mapping there.
+
+## Repo and CI
+
+- `main` is protected by a ruleset (source of truth: `.github/rulesets/protect-main.json`): changes go through squash-merged PRs that must pass Build and Test, CodeQL (`Analyze (csharp)`, `Analyze (actions)`) and Dependency Review. Renaming a workflow job breaks the required check, so update the ruleset with it.
+- Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment; Dependabot updates both. Dependabot waits 14 days before proposing new versions.
 - The Aspire version (13.6.1) appears in four places that must move together: the `Aspire.AppHost.Sdk/<version>` in the AppHost `.csproj`, `Aspire.Hosting.Testing` in `Directory.Packages.props`, the Aspire CLI install in `.devcontainer/devcontainer.json`, and `ASPIRE_CLI_VERSION` in `.github/workflows/build.yml`.
 - The AppHost uses `AspireUseCliBundle=true`, so builds of the AppHost need the Aspire CLI (`aspire`) on PATH (the container adds `~/.dotnet/tools`).
 - The SDK is pinned in `global.json`. Line endings are LF (`.gitattributes`, `.editorconfig`).
