@@ -1,0 +1,8 @@
+{
+  "appHost": {
+    "path": "src/PhotoMapper.AppHost/PhotoMapper.AppHost.csproj"
+  },
+  "features": {
+    "defaultWatchEnabled": "true"
+  }
+}

@@ -2,76 +2,54 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build frontend",
+            "label": "run (aspire, hot reload)",
+            "command": "aspire",
+            "type": "process",
+            "args": [
+                "run"
+            ],
+            "isBackground": true,
+            "problemMatcher": []
+        },
+        {
+            "label": "build",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/SampleApp/FrontEnd/FrontEnd.csproj",
+                "${workspaceFolder}/PhotoMapper.slnx",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         },
         {
-            "label": "publish frontend",
+            "label": "test",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/SampleApp/FrontEnd/FrontEnd.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "test",
+                "${workspaceFolder}/PhotoMapper.slnx"
             ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
         },
         {
-            "label": "watch frontend",
+            "label": "format",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/SampleApp/FrontEnd/FrontEnd.csproj"
+                "format",
+                "${workspaceFolder}/PhotoMapper.slnx"
             ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "build backend",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/SampleApp/BackEnd/BackEnd.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish backend",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/SampleApp/BackEnd/BackEnd.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch backend",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/SampleApp/BackEnd/BackEnd.csproj"
-            ],
-            "problemMatcher": "$msCompile"
+            "problemMatcher": []
         }
     ]
 }

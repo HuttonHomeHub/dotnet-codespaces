@@ -1,0 +1,14 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.6.1">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>e8095edf-5e58-409d-92ee-00918a9c7a2d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhotoMapper.ApiService\PhotoMapper.ApiService.csproj" />
+    <ProjectReference Include="..\PhotoMapper.Web\PhotoMapper.Web.csproj" />
+  </ItemGroup>
+
+</Project>

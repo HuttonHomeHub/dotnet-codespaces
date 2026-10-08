@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      aspire:
+        patterns:
+          - "Aspire.*"
+      opentelemetry:
+        patterns:
+          - "OpenTelemetry.*"
+      microsoft-extensions:
+        patterns:
+          - "Microsoft.Extensions.*"
+          - "Microsoft.AspNetCore.*"
+      xunit:
+        patterns:
+          - "xunit*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: devcontainers
+    directory: /
+    schedule:
+      interval: weekly

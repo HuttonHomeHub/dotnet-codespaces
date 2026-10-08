@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PhotoMapper.ApiService/PhotoMapper.ApiService.csproj" />
+    <Project Path="src/PhotoMapper.AppHost/PhotoMapper.AppHost.csproj" />
+    <Project Path="src/PhotoMapper.ServiceDefaults/PhotoMapper.ServiceDefaults.csproj" />
+    <Project Path="src/PhotoMapper.Web/PhotoMapper.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PhotoMapper.Tests/PhotoMapper.Tests.csproj" />
+  </Folder>
+</Solution>

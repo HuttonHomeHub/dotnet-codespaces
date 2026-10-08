@@ -1,24 +1,23 @@
-name: Build Backend and Frontend
+name: Build and Test
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
-      
+
 permissions:
   contents: read
 
+env:
+  ASPIRE_CLI_VERSION: 13.6.1
+
 jobs:
   build:
-    name: Build All Projects
+    name: Build and Test
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        project:
-          - SampleApp/BackEnd/BackEnd.csproj
-          - SampleApp/FrontEnd/FrontEnd.csproj
 
     steps:
       - name: Checkout repository
@@ -27,10 +26,19 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          global-json-file: global.json
+
+      - name: Install Aspire CLI
+        run: dotnet tool install -g Aspire.Cli --version $ASPIRE_CLI_VERSION
 
       - name: Restore dependencies
-        run: dotnet restore ${{ matrix.project }}
+        run: dotnet restore PhotoMapper.slnx
 
-      - name: Build project
-        run: dotnet build ${{ matrix.project }} --no-restore --configuration Release
+      - name: Check formatting
+        run: dotnet format PhotoMapper.slnx --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build PhotoMapper.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test PhotoMapper.slnx --no-build --configuration Release
