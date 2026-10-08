@@ -6,6 +6,6 @@
     <Project Path="src/PhotoMapper.Web/PhotoMapper.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/PhotoMapper.Tests/PhotoMapper.Tests.csproj" />
+    <Project Path="tests/PhotoMapper.IntegrationTests/PhotoMapper.IntegrationTests.csproj" />
   </Folder>
 </Solution>

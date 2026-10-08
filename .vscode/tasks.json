@@ -33,6 +33,7 @@
             "type": "process",
             "args": [
                 "test",
+                "--solution",
                 "${workspaceFolder}/PhotoMapper.slnx"
             ],
             "problemMatcher": "$msCompile",

@@ -54,4 +54,14 @@ jobs:
         run: dotnet build PhotoMapper.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test PhotoMapper.slnx --no-build --configuration Release
+        run: >-
+          dotnet test --solution PhotoMapper.slnx --no-build --configuration Release
+          --results-directory "$GITHUB_WORKSPACE/TestResults" --report-xunit-trx
+
+      - name: Upload test results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: error

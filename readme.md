@@ -33,15 +33,15 @@ src/
   PhotoMapper.ApiService/       Minimal API
   PhotoMapper.Web/              Blazor Web App (interactive server rendering)
 tests/
-  PhotoMapper.Tests/            xUnit integration tests that start the whole app via the AppHost
+  PhotoMapper.IntegrationTests/ xUnit v3 tests that start the whole app once via the AppHost
 ```
 
 ## Build, test, format
 
 ```bash
 dotnet build PhotoMapper.slnx
-dotnet test PhotoMapper.slnx
+dotnet test --solution PhotoMapper.slnx
 dotnet format PhotoMapper.slnx
 ```
 
-CI runs the formatting check, build and tests on every push and pull request to `main`.
+CI runs the formatting check, build and tests on every push and pull request to `main`, plus CodeQL and dependency review. Changes reach `main` only through pull requests.

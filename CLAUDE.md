@@ -11,8 +11,8 @@ PhotoMapper: a .NET 10 / .NET Aspire 13 solution with a Blazor Web App frontend 
 ```bash
 aspire run                                    # run everything with hot reload (watch mode is on in aspire.config.json)
 dotnet build PhotoMapper.slnx
-dotnet test PhotoMapper.slnx
-dotnet test PhotoMapper.slnx --filter "FullyQualifiedName~WebTests"   # single test class/method
+dotnet test --solution PhotoMapper.slnx       # tests run on Microsoft.Testing.Platform (global.json): no positional path
+dotnet test --solution PhotoMapper.slnx --filter-class "*WebFrontendTests"   # or --filter-method "*TestName"
 dotnet format PhotoMapper.slnx                # fix formatting; CI runs it with --verify-no-changes
 ```
 
@@ -24,7 +24,8 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 - **ServiceDefaults** (`Extensions.cs`) is referenced by every service and called via `builder.AddServiceDefaults()` / `app.MapDefaultEndpoints()`. It configures OpenTelemetry, service discovery, HTTP resilience and the `/health` and `/alive` endpoints (Development only).
 - **Web** uses the .NET 8+ Blazor Web App model (`AddRazorComponents().AddInteractiveServerComponents()`, `Components/` folder, `App.razor` + `Routes.razor`), not the legacy `_Host.cshtml` Blazor Server model.
 - **ApiService** clears `document.Servers` in its OpenAPI transformer as a workaround for Codespaces port forwarding (dotnet/aspnetcore#57332); keep it.
-- **Tests** use `Aspire.Hosting.Testing` (`DistributedApplicationTestingBuilder`) to start the real AppHost, so each test boots the whole app (~20s). Prefer one shared fixture when adding many tests.
+- **Integration tests** (`tests/PhotoMapper.IntegrationTests`) use `Aspire.Hosting.Testing` to start the real AppHost. `AppHostFixture` is an xUnit v3 assembly fixture, so the app boots once per run (~20s); new test classes take it as a constructor parameter instead of building their own AppHost. The apps run as separate processes, so these tests contribute no code coverage.
+- **Test projects** get xUnit v3, the coverage extension, `IsTestProject` and `OutputType=Exe` from `tests/Directory.Build.props`; don't repeat them in test `.csproj` files.
 
 ## Build conventions
 
@@ -32,11 +33,11 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 - Package versions are central in `Directory.Packages.props`; `PackageReference` items have no `Version`.
 - Every project has a committed `packages.lock.json`. After changing a package, run `dotnet restore PhotoMapper.slnx` and commit the updated lock files; CI restores in locked mode (set in `Directory.Build.props` when `GITHUB_ACTIONS` is true) and fails on drift. NuGet audit fails restore on any known-vulnerable package, transitive ones included.
 - `nuget.config` restricts restore to nuget.org via package source mapping; adding another feed means adding a source and a mapping there.
+- The Aspire version (13.6.1) appears in four places that must move together: the `Aspire.AppHost.Sdk/<version>` in the AppHost `.csproj`, `Aspire.Hosting.Testing` in `Directory.Packages.props`, the Aspire CLI install in `.devcontainer/devcontainer.json`, and `ASPIRE_CLI_VERSION` in `.github/workflows/build.yml`.
+- The AppHost uses `AspireUseCliBundle=true`, so builds of the AppHost need the Aspire CLI (`aspire`) on PATH (the container adds `~/.dotnet/tools`).
+- The SDK is pinned in `global.json`. Line endings are LF (`.gitattributes`, `.editorconfig`).
 
 ## Repo and CI
 
 - `main` is protected by a ruleset (source of truth: `.github/rulesets/protect-main.json`): changes go through squash-merged PRs that must pass Build and Test, CodeQL (`Analyze (csharp)`, `Analyze (actions)`) and Dependency Review. Renaming a workflow job breaks the required check, so update the ruleset with it.
 - Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment; Dependabot updates both. Dependabot waits 14 days before proposing new versions.
-- The Aspire version (13.6.1) appears in four places that must move together: the `Aspire.AppHost.Sdk/<version>` in the AppHost `.csproj`, `Aspire.Hosting.Testing` in `Directory.Packages.props`, the Aspire CLI install in `.devcontainer/devcontainer.json`, and `ASPIRE_CLI_VERSION` in `.github/workflows/build.yml`.
-- The AppHost uses `AspireUseCliBundle=true`, so builds of the AppHost need the Aspire CLI (`aspire`) on PATH (the container adds `~/.dotnet/tools`).
-- The SDK is pinned in `global.json`. Line endings are LF (`.gitattributes`, `.editorconfig`).
