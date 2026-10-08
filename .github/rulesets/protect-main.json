@@ -33,7 +33,8 @@
           { "context": "Build and Test", "integration_id": 15368 },
           { "context": "Analyze (csharp)", "integration_id": 15368 },
           { "context": "Analyze (actions)", "integration_id": 15368 },
-          { "context": "Dependency Review", "integration_id": 15368 }
+          { "context": "Dependency Review", "integration_id": 15368 },
+          { "context": "Build, smoke-test and publish images", "integration_id": 15368 }
         ]
       }
     },

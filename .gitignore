@@ -481,3 +481,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .azure
+
+# Deployment: generated bundle and server-specific settings
+deploy/out/
+deploy/site.env

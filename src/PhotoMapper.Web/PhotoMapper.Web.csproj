@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
+  <PropertyGroup>
+    <ContainerRepository>huttonhomehub/photomapper-web</ContainerRepository>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\PhotoMapper.ServiceDefaults\PhotoMapper.ServiceDefaults.csproj" />
   </ItemGroup>

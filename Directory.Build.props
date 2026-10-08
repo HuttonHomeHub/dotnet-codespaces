@@ -18,6 +18,17 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
+  <PropertyGroup Label="Containers">
+    <!-- Used by dotnet publish -t:PublishContainer (see .github/workflows/deploy.yml). Chiseled images have no shell or
+         package manager and run as a non-root user; "extra" keeps ICU and tzdata for culture and time zone support. -->
+    <ContainerFamily>noble-chiseled-extra</ContainerFamily>
+  </PropertyGroup>
+
+  <ItemGroup Label="Containers">
+    <!-- Links the GHCR packages to this repository, so they inherit its visibility and access. -->
+    <ContainerLabel Include="org.opencontainers.image.source" Value="https://github.com/HuttonHomeHub/dotnet-codespaces" />
+  </ItemGroup>
+
   <PropertyGroup Label="CI" Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <RestoreLockedMode>true</RestoreLockedMode>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>

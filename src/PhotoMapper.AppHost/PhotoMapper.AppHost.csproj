@@ -11,4 +11,8 @@
     <ProjectReference Include="..\PhotoMapper.Web\PhotoMapper.Web.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Docker" />
+  </ItemGroup>
+
 </Project>
