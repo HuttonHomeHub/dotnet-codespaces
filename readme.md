@@ -28,6 +28,8 @@ The run prints a dashboard link with a login token. The dashboard lists every se
 
 The app runs PostgreSQL and Mailpit in Docker containers. To try accounts, register on the web app, then open the confirmation email in Mailpit. Database changes are applied automatically on start.
 
+To make your account an admin (which adds a **Users** page for managing accounts), confirm it, then run `scripts/make-admin.sh you@example.com` while the app is running and sign in again.
+
 Saving a file reloads the change into the running app. Edits that can't be hot-reloaded restart the affected service automatically.
 
 ## Project layout

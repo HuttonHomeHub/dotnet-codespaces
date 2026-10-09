@@ -29,6 +29,31 @@ public sealed class AppHostFixture : IAsyncLifetime
     // The Mailpit inbox that receives every email the app sends.
     public MailpitInbox CreateMailpitInbox() => new(App.GetEndpoint(Mail, "http"));
 
+    // Runs the migration service's `make-admin <email>` command against the test database, as an operator would.
+    public async Task<(int ExitCode, string Output)> MakeAdminAsync(string email)
+    {
+        string connectionString = await App.GetConnectionStringAsync("photomapperdb", TestContext.Current.CancellationToken)
+            ?? throw new InvalidOperationException("No connection string for photomapperdb.");
+        string projectDirectory = Path.GetDirectoryName(new Projects.PhotoMapper_MigrationService().ProjectPath)!;
+#if DEBUG
+        const string configuration = "Debug";
+#else
+        const string configuration = "Release";
+#endif
+        string assembly = Path.Combine(projectDirectory, "bin", configuration, "net10.0", "PhotoMapper.MigrationService.dll");
+
+        System.Diagnostics.ProcessStartInfo start = new("dotnet", [assembly, "make-admin", email])
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            Environment = { ["ConnectionStrings__photomapperdb"] = connectionString, ["DOTNET_ENVIRONMENT"] = "Development" },
+        };
+        using System.Diagnostics.Process process = System.Diagnostics.Process.Start(start)!;
+        string output = await process.StandardOutput.ReadToEndAsync(TestContext.Current.CancellationToken);
+        await process.WaitForExitAsync(TestContext.Current.CancellationToken);
+        return (process.ExitCode, output);
+    }
+
     public async ValueTask InitializeAsync()
     {
         using CancellationTokenSource timeout = new(StartupTimeout);

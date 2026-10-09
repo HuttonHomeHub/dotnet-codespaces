@@ -10,14 +10,16 @@ using PhotoMapper.Data;
 namespace PhotoMapper.Web.Components.Account;
 
 // This is a server-side AuthenticationStateProvider that revalidates the security stamp for the connected user
-// every 30 minutes an interactive circuit is connected.
+// every minute an interactive circuit is connected.
 internal sealed class IdentityRevalidatingAuthenticationStateProvider(
         ILoggerFactory loggerFactory,
         IServiceScopeFactory scopeFactory,
         IOptions<IdentityOptions> options)
     : RevalidatingServerAuthenticationStateProvider(loggerFactory)
 {
-    protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(30);
+    // Changed from the template (30 minutes): an admin locking, deleting or demoting a user ends their open
+    // interactive sessions within a minute. Matches SecurityStampValidatorOptions in Program.cs.
+    protected override TimeSpan RevalidationInterval => TimeSpan.FromMinutes(1);
 
     protected override async Task<bool> ValidateAuthenticationStateAsync(
         AuthenticationState authenticationState, CancellationToken cancellationToken)

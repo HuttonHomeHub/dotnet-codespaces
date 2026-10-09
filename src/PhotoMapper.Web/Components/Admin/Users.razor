@@ -1,0 +1,144 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = AppRoles.Admin)]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using PhotoMapper.Data
+@using PhotoMapper.Web.Components.Account.Shared
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+@* The actions post to AdminUserEndpoints, which enforce the rules (admins only, never your own account). *@
+
+<PageTitle>Users</PageTitle>
+
+<h1>Users</h1>
+
+<StatusMessage />
+
+<form method="get" class="row g-2 mb-3" role="search">
+    <div class="col-sm-8 col-md-6">
+        <input type="search" name="q" value="@Q" class="form-control" placeholder="Search by email" aria-label="Search by email" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+@if (users.Count == 0)
+{
+    <p>No users found.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Email confirmed</th>
+                    <th>Status</th>
+                    <th>Admin</th>
+                    <th><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ApplicationUser user in users)
+                {
+                    bool isAdmin = adminIds.Contains(user.Id);
+                    bool isLocked = user.LockoutEnd > DateTimeOffset.UtcNow;
+                    <tr>
+                        <td>@user.Email</td>
+                        <td>@user.CreatedAt.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</td>
+                        <td>@(user.EmailConfirmed ? "Yes" : "No")</td>
+                        <td>@(isLocked ? "Locked" : "Active")</td>
+                        <td>@(isAdmin ? "Yes" : "No")</td>
+                        <td class="text-nowrap">
+                            @if (user.Id == currentUserId)
+                            {
+                                <span class="text-secondary">This is you</span>
+                            }
+                            else
+                            {
+                                <form method="post" action="@($"admin/users/{user.Id}/{(isLocked ? "unlock" : "lock")}")" class="d-inline">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="returnUrl" value="@currentPage" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@(isLocked ? "Unlock" : "Lock")</button>
+                                </form>
+                                <form method="post" action="@($"admin/users/{user.Id}/{(isAdmin ? "remove-admin" : "grant-admin")}")" class="d-inline">
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="returnUrl" value="@currentPage" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">@(isAdmin ? "Remove admin" : "Make admin")</button>
+                                </form>
+                                <a href="@($"admin/users/{user.Id}/delete")" class="btn btn-sm btn-outline-danger">Delete</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Pages" class="d-flex gap-2 align-items-center">
+        @if (Page > 1)
+        {
+            <a class="btn btn-sm btn-outline-primary" href="@PageLink(Page - 1)">Previous</a>
+        }
+        <span>Page @Page of @pageCount (@total users)</span>
+        @if (Page < pageCount)
+        {
+            <a class="btn btn-sm btn-outline-primary" href="@PageLink(Page + 1)">Next</a>
+        }
+    </nav>
+}
+
+@code {
+    private const int PageSize = 25;
+
+    private List<ApplicationUser> users = [];
+    private HashSet<string> adminIds = [];
+    private string? currentUserId;
+    private string currentPage = "/admin/users";
+    private int total;
+    private int pageCount = 1;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? Q { get; set; }
+
+    [SupplyParameterFromQuery(Name = "page")]
+    private int Page { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUserId = UserManager.GetUserId(HttpContext.User);
+        currentPage = "/" + NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        IQueryable<ApplicationUser> query = UserManager.Users;
+        if (!string.IsNullOrWhiteSpace(Q))
+        {
+            string search = Q.Trim().ToUpperInvariant();
+            query = query.Where(user => user.NormalizedEmail != null && user.NormalizedEmail.Contains(search));
+        }
+
+        total = await query.CountAsync();
+        pageCount = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
+        Page = Math.Clamp(Page, 1, pageCount);
+
+        users = await query
+            .OrderBy(user => user.NormalizedEmail)
+            .Skip((Page - 1) * PageSize)
+            .Take(PageSize)
+            .ToListAsync();
+
+        adminIds = (await UserManager.GetUsersInRoleAsync(AppRoles.Admin)).Select(user => user.Id).ToHashSet();
+    }
+
+    private string PageLink(int page) =>
+        NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?> { ["page"] = page, ["q"] = Q });
+}

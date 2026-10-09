@@ -40,9 +40,13 @@ internal sealed class IdentityRedirectManager(NavigationManager navigationManage
 
     public void RedirectToWithStatus(string uri, string message, HttpContext context)
     {
-        context.Response.Cookies.Append(StatusCookieName, message, StatusCookieBuilder.Build(context));
+        SetStatusMessage(context, message);
         RedirectTo(uri);
     }
+
+    // Shows `message` in the StatusMessage component on the next page, also from endpoints outside Blazor.
+    public static void SetStatusMessage(HttpContext context, string message) =>
+        context.Response.Cookies.Append(StatusCookieName, message, StatusCookieBuilder.Build(context));
 
     private string CurrentPath => navigationManager.ToAbsoluteUri(navigationManager.Uri).GetLeftPart(UriPartial.Path);
 

@@ -4,7 +4,7 @@ Every push to `main` runs the **Containers** workflow (`.github/workflows/deploy
 
 1. builds the `apiservice`, `web` and `migrations` images (chiseled Ubuntu, non-root) with `dotnet publish -t:PublishContainer`;
 2. generates `docker-compose.yaml` from the AppHost with `aspire publish`;
-3. starts that stack behind the Caddy proxy and smoke-tests it (`smoke-test.sh`), including registering an account, which proves the migrations ran and the web app can write to PostgreSQL;
+3. starts that stack behind the Caddy proxy and smoke-tests it (`smoke-test.sh`), including registering an account (which proves the migrations ran and the web app can write to PostgreSQL) and running the `make-admin` command;
 4. pushes the tested images to `ghcr.io/huttonhomehub/photomapper-{apiservice,web,migrations}` (tags `sha-<commit>` and `latest`) with signed build provenance;
 5. uploads a **deployment bundle** artifact, `deploy-bundle-<commit>`, kept for 90 days.
 
@@ -35,6 +35,17 @@ On every start, the `migrations` container waits for PostgreSQL to be healthy, a
    - `MAIL` and `MAIL_FROM`: your provider's SMTP details and sender address.
 
    Keep `site.env` readable only by you (`chmod 600 site.env`).
+
+## Make the first admin
+
+After the first deploy, sign up on the site and confirm your email, then on the server:
+
+```bash
+docker compose --env-file .env --env-file site.env -f docker-compose.yaml -f compose.proxy.yaml \
+  run --rm --no-deps migrations make-admin you@example.com
+```
+
+Sign in again (or wait a minute) and a **Users** link appears in the menu. From there admins can make other users admins, so you only need this once. The command refuses accounts that don't exist or haven't confirmed their email.
 
 ## Deploy or update
 
