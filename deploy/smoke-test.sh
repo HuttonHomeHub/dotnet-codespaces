@@ -59,3 +59,12 @@ if [[ "$location" != *"/Account/RegisterConfirmation"* ]]; then
   exit 1
 fi
 echo "ok:   POST /Account/Register -> account saved"
+
+# The make-admin command runs in the migrations image on the server (see README.md). The smoke account hasn't
+# confirmed its email, so the command must refuse it, which proves the command runs and reaches the database.
+admin_output=$("${compose[@]}" run --rm --no-deps migrations make-admin smoke-test@example.com 2>&1) && admin_exit=0 || admin_exit=$?
+if [[ $admin_exit -ne 1 || "$admin_output" != *"hasn't confirmed its email address"* ]]; then
+  echo "FAIL: make-admin exited $admin_exit with: $admin_output"
+  exit 1
+fi
+echo "ok:   make-admin -> refuses an unconfirmed account"

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using PhotoMapper.Data;
 using PhotoMapper.Web.Components;
 using PhotoMapper.Web.Components.Account;
+using PhotoMapper.Web.Components.Admin;
 using PhotoMapper.Web.Email;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,9 +38,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.User.RequireUniqueEmail = true;
         IdentityStoreSettings.Apply(options.Stores);
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
+
+// Sign-in cookies are re-checked against the database every minute (default 30), so when an admin locks, deletes
+// or demotes a user, that user's sessions end promptly. Admin actions update the security stamp to trigger this.
+builder.Services.Configure<SecurityStampValidatorOptions>(options => options.ValidationInterval = TimeSpan.FromMinutes(1));
 
 // Account emails go out over SMTP: Mailpit locally, a real provider when deployed (the "mail" connection string).
 string mailConnectionString = builder.Configuration.GetConnectionString("mail")
@@ -68,6 +74,7 @@ app.MapRazorComponents<App>()
 
 // Endpoints the account pages post to (logout, passkeys, external logins, personal data download).
 app.MapAdditionalIdentityEndpoints();
+app.MapAdminUserEndpoints();
 
 app.MapDefaultEndpoints();
 

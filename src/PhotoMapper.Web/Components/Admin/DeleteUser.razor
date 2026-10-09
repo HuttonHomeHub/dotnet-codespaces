@@ -1,0 +1,50 @@
+@page "/admin/users/{Id}/delete"
+@attribute [Authorize(Roles = AppRoles.Admin)]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using PhotoMapper.Data
+
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Delete user</PageTitle>
+
+<h1>Delete user</h1>
+
+@if (user is null)
+{
+    <p>That account no longer exists.</p>
+    <a href="admin/users">Back to users</a>
+}
+else if (user.Id == UserManager.GetUserId(HttpContext.User))
+{
+    <p>You can't delete your own account here. Use <a href="Account/Manage/PersonalData">your account page</a> instead.</p>
+    <a href="admin/users">Back to users</a>
+}
+else
+{
+    <div class="alert alert-warning" role="alert">
+        <p>This permanently deletes <strong>@user.Email</strong> and signs them out everywhere. It can't be undone.</p>
+    </div>
+    <form method="post" action="@($"admin/users/{user.Id}/delete")">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="/admin/users" />
+        <button type="submit" class="btn btn-danger">Delete @user.Email</button>
+        <a href="admin/users" class="btn btn-link">Cancel</a>
+    </form>
+}
+
+@code {
+    private ApplicationUser? user;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [Parameter]
+    public string Id { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await UserManager.FindByIdAsync(Id);
+    }
+}
