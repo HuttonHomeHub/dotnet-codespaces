@@ -28,6 +28,9 @@
         "memory": "8gb",
         "cpus": 4
     },
+    "containerEnv": {
+        "CLAUDE_CONFIG_DIR": "/workspaces/.claude-code"
+    },
     "remoteEnv": {
         "PATH": "${containerEnv:PATH}:/root/.dotnet/tools"
     },
