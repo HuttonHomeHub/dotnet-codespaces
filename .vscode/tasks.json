@@ -2,14 +2,22 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "run (aspire, hot reload)",
-            "command": "aspire",
+            "label": "run",
+            "detail": "Run the app with hot reload (aspire run). Stopping the task stops everything and frees the ports.",
+            "command": "${workspaceFolder}/scripts/run.sh",
             "type": "process",
-            "args": [
-                "run"
-            ],
             "isBackground": true,
             "problemMatcher": []
+        },
+        {
+            "label": "stop",
+            "detail": "Stop anything a previous run left behind and free the app's ports.",
+            "command": "${workspaceFolder}/scripts/stop.sh",
+            "type": "process",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "silent"
+            }
         },
         {
             "label": "build",

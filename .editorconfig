@@ -35,6 +35,9 @@ tab_width = 4
 #### .NET Coding Conventions ####
 [*.{cs,vb}]
 
+# Unused usings fail the build (needs GenerateDocumentationFile, set in Directory.Build.props)
+dotnet_diagnostic.IDE0005.severity = warning
+
 # Organize usings
 dotnet_separate_import_directive_groups = true
 dotnet_sort_system_directives_first = true

@@ -6,15 +6,23 @@
         "ghcr.io/devcontainers/features/github-cli:1": {
             "version": "2"
         },
-        "ghcr.io/devcontainers/features/common-utils:2": {}
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": false,
+            "installOhMyZsh": false,
+            "installOhMyZshConfig": false
+        }
     },
     "customizations": {
         "vscode": {
             "extensions": [
                 "anthropic.claude-code",
-                "GitHub.copilot",
+                "EditorConfig.EditorConfig",
                 "GitHub.vscode-github-actions",
-                "ms-dotnettools.csdevkit"
+                "GitHub.vscode-pull-request-github",
+                "microsoft-aspire.aspire-vscode",
+                "ms-azuretools.vscode-containers",
+                "ms-dotnettools.csdevkit",
+                "timonwong.shellcheck"
             ]
         }
     },
@@ -23,7 +31,7 @@
         8080,
         8081
     ],
-    "postCreateCommand": "dotnet tool install -g Aspire.Cli --version 13.6.1 && dotnet restore PhotoMapper.slnx",
+    "postCreateCommand": "dotnet tool install -g Aspire.Cli --version 13.6.1 && dotnet tool restore && dotnet restore PhotoMapper.slnx",
     "hostRequirements": {
         "memory": "8gb",
         "cpus": 4
@@ -47,5 +55,8 @@
             "label": "Web",
             "onAutoForward": "notify"
         }
+    },
+    "otherPortsAttributes": {
+        "onAutoForward": "ignore"
     }
 }

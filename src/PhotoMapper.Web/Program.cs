@@ -9,8 +9,6 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddOutputCache();
-
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -23,8 +21,6 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
 app.UseAntiforgery();
-
-app.UseOutputCache();
 
 app.MapStaticAssets();
 
