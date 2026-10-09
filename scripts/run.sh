@@ -17,7 +17,7 @@ stop_app() {
   trap - INT TERM HUP
   if [[ -n "$app" ]] && kill -0 "$app" 2>/dev/null; then
     kill -INT "$app" 2>/dev/null
-    for _ in $(seq 20); do
+    for _ in $(seq 60); do
       kill -0 "$app" 2>/dev/null || break
       sleep 1
     done
@@ -32,7 +32,9 @@ trap 'stop_app; exit 129' HUP
 scripts/stop.sh --quiet || exit 1
 
 # Own session and process group, so a terminal Ctrl+C reaches Aspire exactly once (via the trap above).
-setsid aspire run "$@" &
+# `env --default-signal` matters: bash starts background commands with SIGINT ignored, and .NET keeps that, so
+# without it Aspire would ignore the Ctrl+C we forward and never shut down (or stop its containers) gracefully.
+setsid env --default-signal=INT,QUIT aspire run "$@" &
 app=$!
 
 wait "$app"

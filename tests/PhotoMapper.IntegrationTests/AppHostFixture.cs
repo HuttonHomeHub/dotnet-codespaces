@@ -12,35 +12,41 @@ public sealed class AppHostFixture : IAsyncLifetime
 {
     public const string ApiService = "apiservice";
     public const string WebFrontend = "webfrontend";
+    public const string Mail = "mail";
 
-    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(2);
+    // First runs pull the PostgreSQL and Mailpit images.
+    private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(5);
 
     private DistributedApplication? _app;
 
-    public HttpClient CreateHttpClient(string resourceName)
-    {
-        if (_app is null)
-        {
-            throw new InvalidOperationException("The app has not been started.");
-        }
+    private DistributedApplication App => _app ?? throw new InvalidOperationException("The app has not been started.");
 
-        return _app.CreateHttpClient(resourceName);
-    }
+    public HttpClient CreateHttpClient(string resourceName) => App.CreateHttpClient(resourceName);
+
+    // A browser-like client for the web app with its own cookies, so tests don't share a signed-in session.
+    public BrowserSession CreateBrowserSession() => new(App.GetEndpoint(WebFrontend, "http"));
+
+    // The Mailpit inbox that receives every email the app sends.
+    public MailpitInbox CreateMailpitInbox() => new(App.GetEndpoint(Mail, "http"));
 
     public async ValueTask InitializeAsync()
     {
         using CancellationTokenSource timeout = new(StartupTimeout);
         CancellationToken cancellationToken = timeout.Token;
 
-        IDistributedApplicationTestingBuilder appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PhotoMapper_AppHost>(cancellationToken);
+        // UseVolumes=false: an empty database for every test run, separate from the development database.
+        IDistributedApplicationTestingBuilder appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PhotoMapper_AppHost>(
+            ["UseVolumes=false"], cancellationToken);
         appHost.Services.ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
         _app = await appHost.BuildAsync(cancellationToken);
         await _app.StartAsync(cancellationToken);
 
+        // The web app only starts once the migration service has finished, so healthy means the schema is ready.
         await Task.WhenAll(
             _app.ResourceNotifications.WaitForResourceHealthyAsync(ApiService, cancellationToken),
-            _app.ResourceNotifications.WaitForResourceHealthyAsync(WebFrontend, cancellationToken));
+            _app.ResourceNotifications.WaitForResourceHealthyAsync(WebFrontend, cancellationToken),
+            _app.ResourceNotifications.WaitForResourceHealthyAsync(Mail, cancellationToken));
     }
 
     public async ValueTask DisposeAsync()
