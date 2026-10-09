@@ -8,11 +8,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PhotoMapper.ApiService\PhotoMapper.ApiService.csproj" />
+    <ProjectReference Include="..\PhotoMapper.MigrationService\PhotoMapper.MigrationService.csproj" />
     <ProjectReference Include="..\PhotoMapper.Web\PhotoMapper.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Docker" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.MailPit" />
   </ItemGroup>
 
 </Project>

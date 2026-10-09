@@ -2,10 +2,21 @@
 
   <PropertyGroup>
     <ContainerRepository>huttonhomehub/photomapper-web</ContainerRepository>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="PhotoMapper.Web.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhotoMapper.Data\PhotoMapper.Data.csproj" />
     <ProjectReference Include="..\PhotoMapper.ServiceDefaults\PhotoMapper.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="MailKit" />
   </ItemGroup>
 
 </Project>

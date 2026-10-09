@@ -29,7 +29,8 @@
     "forwardPorts": [
         15051,
         8080,
-        8081
+        8081,
+        8025
     ],
     "postCreateCommand": "dotnet tool install -g Aspire.Cli --version 13.6.1 && dotnet tool restore && dotnet restore PhotoMapper.slnx",
     "hostRequirements": {
@@ -54,6 +55,10 @@
         "8081": {
             "label": "Web",
             "onAutoForward": "notify"
+        },
+        "8025": {
+            "label": "Mailpit (dev email)",
+            "onAutoForward": "silent"
         }
     },
     "otherPortsAttributes": {

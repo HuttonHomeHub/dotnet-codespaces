@@ -53,7 +53,7 @@ jobs:
 
       - name: Build container images
         run: |
-          for project in ApiService Web; do
+          for project in ApiService Web MigrationService; do
             dotnet publish "src/PhotoMapper.$project" --configuration Release -t:PublishContainer -p:ContainerImageTags=ci
           done
 
@@ -61,7 +61,8 @@ jobs:
         run: |
           aspire publish --output-path deploy/out --non-interactive --nologo
           cp deploy/compose.proxy.yaml deploy/Caddyfile deploy/site.env.example deploy/README.md deploy/out/
-          deploy/write-env.sh deploy/out huttonhomehub/photomapper-apiservice:ci huttonhomehub/photomapper-web:ci
+          deploy/write-env.sh deploy/out huttonhomehub/photomapper-apiservice:ci huttonhomehub/photomapper-web:ci \
+            huttonhomehub/photomapper-migrations:ci
 
       - name: Smoke test
         run: deploy/smoke-test.sh deploy/out
@@ -86,7 +87,7 @@ jobs:
         id: push
         if: ${{ env.PUBLISH == 'true' }}
         run: |
-          for name in apiservice web; do
+          for name in apiservice web migrations; do
             local_image="huttonhomehub/photomapper-$name:ci"
             remote="$REGISTRY/huttonhomehub/photomapper-$name"
             docker tag "$local_image" "$remote:sha-$GITHUB_SHA"
@@ -113,17 +114,27 @@ jobs:
           subject-digest: ${{ steps.push.outputs.web-digest }}
           push-to-registry: true
 
+      - name: Attest migrations image provenance
+        if: ${{ env.PUBLISH == 'true' }}
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/huttonhomehub/photomapper-migrations
+          subject-digest: ${{ steps.push.outputs.migrations-digest }}
+          push-to-registry: true
+
       # The bundle's .env pins the pushed images by digest, so a deployment is exactly this commit.
       - name: Pin bundle to pushed images
         if: ${{ env.PUBLISH == 'true' }}
         env:
           API_DIGEST: ${{ steps.push.outputs.apiservice-digest }}
           WEB_DIGEST: ${{ steps.push.outputs.web-digest }}
+          MIGRATIONS_DIGEST: ${{ steps.push.outputs.migrations-digest }}
         run: |
           rm -f deploy/out/smoke.log
           deploy/write-env.sh deploy/out \
             "$REGISTRY/huttonhomehub/photomapper-apiservice@$API_DIGEST" \
-            "$REGISTRY/huttonhomehub/photomapper-web@$WEB_DIGEST"
+            "$REGISTRY/huttonhomehub/photomapper-web@$WEB_DIGEST" \
+            "$REGISTRY/huttonhomehub/photomapper-migrations@$MIGRATIONS_DIGEST"
           { echo "### Deployment bundle .env"; echo '```'; cat deploy/out/.env; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload deployment bundle

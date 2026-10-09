@@ -24,6 +24,9 @@ The run prints a dashboard link with a login token. The dashboard lists every se
 | 15051 | Aspire dashboard                                        |
 | 8081  | Web frontend (Blazor)                                   |
 | 8080  | API (interactive API docs at `/scalar`, Development only) |
+| 8025  | Mailpit: catches every email the app sends (account confirmation, password reset) |
+
+The app runs PostgreSQL and Mailpit in Docker containers. To try accounts, register on the web app, then open the confirmation email in Mailpit. Database changes are applied automatically on start.
 
 Saving a file reloads the change into the running app. Edits that can't be hot-reloaded restart the affected service automatically.
 
@@ -34,10 +37,13 @@ src/
   PhotoMapper.AppHost/          Aspire orchestrator: starts and wires up the services
   PhotoMapper.ServiceDefaults/  Shared telemetry, health checks, resilience, service discovery
   PhotoMapper.ApiService/       Minimal API
-  PhotoMapper.Web/              Blazor Web App (interactive server rendering)
+  PhotoMapper.Web/              Blazor Web App (interactive server rendering), with the account pages
+  PhotoMapper.Data/             EF Core database context, user model and migrations
+  PhotoMapper.MigrationService/ Applies database migrations on start, then exits
 tests/
   PhotoMapper.IntegrationTests/ xUnit v3 tests that start the whole app once via the AppHost
-  PhotoMapper.Web.Tests/        bUnit unit tests for the Blazor components
+  PhotoMapper.Web.Tests/        Unit tests for the web app (bUnit for Blazor components)
+  PhotoMapper.Data.Tests/       Checks the data model matches the migrations
 ```
 
 ## Build, test, format

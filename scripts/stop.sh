@@ -6,6 +6,7 @@
 #   - `aspire run` processes started in this repository and `dotnet watch` processes for this AppHost,
 #     plus every process they started;
 #   - anything still listening on the app's fixed ports (read from the launchSettings.json files);
+#   - containers Aspire started for a run that has ended;
 # then sends SIGTERM, waits, and sends SIGKILL to whatever is left.
 # Usage: scripts/stop.sh [--quiet]
 set -euo pipefail
@@ -57,29 +58,43 @@ find_targets() {
   } | sort -un | grep -vxE "$$|$PPID" || true
 }
 
-mapfile -t targets < <(find_targets)
-if ((${#targets[@]} == 0)); then
-  say "Nothing running. Ports ${ports[*]} are free."
-  exit 0
-fi
+# Containers Aspire's orchestrator started for a run (PostgreSQL, Mailpit...) are labelled with the process that
+# created them. Once that process is gone nothing else removes them, so remove them here. Containers of a live
+# run (another instance, or the integration tests) are left alone. Named data volumes are kept.
+remove_orphaned_containers() {
+  command -v docker >/dev/null && docker info >/dev/null 2>&1 || return 0
+  local id creator removed=0
+  while read -r id creator; do
+    [[ -n "$creator" ]] && kill -0 "$creator" 2>/dev/null && continue
+    docker rm --force --volumes "$id" >/dev/null && removed=$((removed + 1))
+  done < <(docker ps --all --filter label=com.microsoft.developer.usvc-dev.persistent=false \
+    --format '{{.ID}} {{.Label "com.microsoft.developer.usvc-dev.creatorProcessId"}}')
+  ((removed > 0)) && say "Removed $removed orphaned container(s)."
+  return 0
+}
 
-say "Stopping ${#targets[@]} process(es): ${targets[*]}"
-# Re-scan each second: stopping the AppHost is what orphans its DCP.
-for _ in $(seq 10); do
-  kill -TERM "${targets[@]}" 2>/dev/null || true
-  sleep 1
+mapfile -t targets < <(find_targets)
+if ((${#targets[@]} > 0)); then
+  say "Stopping ${#targets[@]} process(es): ${targets[*]}"
+  # Re-scan each second: stopping the AppHost is what orphans its DCP.
+  for _ in $(seq 10); do
+    kill -TERM "${targets[@]}" 2>/dev/null || true
+    sleep 1
+    mapfile -t targets < <(find_targets)
+    ((${#targets[@]} == 0)) && break
+  done
+  if ((${#targets[@]} > 0)); then
+    say "Still running after SIGTERM, sending SIGKILL: ${targets[*]}"
+    kill -KILL "${targets[@]}" 2>/dev/null || true
+    sleep 1
+  fi
+
   mapfile -t targets < <(find_targets)
-  ((${#targets[@]} == 0)) && break
-done
-if ((${#targets[@]} > 0)); then
-  say "Still running after SIGTERM, sending SIGKILL: ${targets[*]}"
-  kill -KILL "${targets[@]}" 2>/dev/null || true
-  sleep 1
+  if ((${#targets[@]} > 0)); then
+    echo "Could not stop: ${targets[*]}" >&2
+    exit 1
+  fi
 fi
 
-mapfile -t targets < <(find_targets)
-if ((${#targets[@]} > 0)); then
-  echo "Could not stop: ${targets[*]}" >&2
-  exit 1
-fi
-say "Stopped. Ports ${ports[*]} are free."
+remove_orphaned_containers
+say "Nothing left running. Ports ${ports[*]} are free."

@@ -2,10 +2,13 @@
   <Folder Name="/src/">
     <Project Path="src/PhotoMapper.ApiService/PhotoMapper.ApiService.csproj" />
     <Project Path="src/PhotoMapper.AppHost/PhotoMapper.AppHost.csproj" />
+    <Project Path="src/PhotoMapper.Data/PhotoMapper.Data.csproj" />
+    <Project Path="src/PhotoMapper.MigrationService/PhotoMapper.MigrationService.csproj" />
     <Project Path="src/PhotoMapper.ServiceDefaults/PhotoMapper.ServiceDefaults.csproj" />
     <Project Path="src/PhotoMapper.Web/PhotoMapper.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/PhotoMapper.Data.Tests/PhotoMapper.Data.Tests.csproj" />
     <Project Path="tests/PhotoMapper.IntegrationTests/PhotoMapper.IntegrationTests.csproj" />
     <Project Path="tests/PhotoMapper.Web.Tests/PhotoMapper.Web.Tests.csproj" />
   </Folder>
