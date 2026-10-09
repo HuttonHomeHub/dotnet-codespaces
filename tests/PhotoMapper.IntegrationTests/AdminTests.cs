@@ -175,26 +175,25 @@ public sealed class AdminTests(AppHostFixture fixture)
         return await SignInSessionAsync(email);
     }
 
-    // Reads a user's id from the user management page (as an admin would see it).
+    // Reads a user's id from the user management page, as an admin (a new one unless `admin` is given).
     private async Task<string> UserIdAsync(string email, BrowserSession? admin = null)
     {
-        BrowserSession? owned = admin is null ? await SignedInAdminAsync() : null;
-        try
+        if (admin is not null)
         {
-            string page = await (admin ?? owned!).GetStringAsync($"/admin/users?q={Uri.EscapeDataString(email)}");
-            Match id = Regex.Match(page, "admin/users/([0-9a-f-]{36})/");
-            if (!id.Success)
-            {
-                // Your own row has no action links; use the account's personal data instead.
-                return await OwnIdAsync(admin!);
-            }
+            return await UserIdAsAsync(admin, email);
+        }
 
-            return id.Groups[1].Value;
-        }
-        finally
-        {
-            owned?.Dispose();
-        }
+        using BrowserSession newAdmin = await SignedInAdminAsync();
+        return await UserIdAsAsync(newAdmin, email);
+    }
+
+    private static async Task<string> UserIdAsAsync(BrowserSession admin, string email)
+    {
+        string page = await admin.GetStringAsync($"/admin/users?q={Uri.EscapeDataString(email)}");
+        Match id = Regex.Match(page, "admin/users/([0-9a-f-]{36})/");
+
+        // Your own row has no action links; use the account's personal data instead.
+        return id.Success ? id.Groups[1].Value : await OwnIdAsync(admin);
     }
 
     private static async Task<string> OwnIdAsync(BrowserSession browser)

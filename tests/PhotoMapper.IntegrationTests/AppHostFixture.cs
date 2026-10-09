@@ -40,7 +40,7 @@ public sealed class AppHostFixture : IAsyncLifetime
 #else
         const string configuration = "Release";
 #endif
-        string assembly = Path.Combine(projectDirectory, "bin", configuration, "net10.0", "PhotoMapper.MigrationService.dll");
+        string assembly = Path.Join(projectDirectory, "bin", configuration, "net10.0", "PhotoMapper.MigrationService.dll");
 
         System.Diagnostics.ProcessStartInfo start = new("dotnet", [assembly, "make-admin", email])
         {
