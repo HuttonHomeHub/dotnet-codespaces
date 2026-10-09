@@ -2,10 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            // Aspire extension: runs the AppHost like `aspire run` and attaches the debugger to every service.
             "name": "PhotoMapper (Aspire)",
+            "type": "aspire",
+            "request": "launch",
+            "program": "${workspaceFolder}",
+            "preLaunchTask": "stop",
+            "postDebugTask": "stop"
+        },
+        {
+            // Fallback through C# Dev Kit, if the Aspire extension is unavailable.
+            "name": "PhotoMapper AppHost (C# Dev Kit)",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/PhotoMapper.AppHost/PhotoMapper.AppHost.csproj"
+            "projectPath": "${workspaceFolder}/src/PhotoMapper.AppHost/PhotoMapper.AppHost.csproj",
+            "preLaunchTask": "stop",
+            "postDebugTask": "stop"
         }
     ]
 }

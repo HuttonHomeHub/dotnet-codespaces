@@ -1,0 +1,41 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint workflows and scripts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Checks workflow syntax and expressions, and shellchecks every run: block.
+      - name: actionlint
+        run: >-
+          docker run --rm -v "$PWD:/repo" -w /repo
+          rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+          -color
+
+      - name: shellcheck
+        run: >-
+          docker run --rm -v "$PWD:/mnt" -w /mnt
+          koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
+          scripts/*.sh deploy/*.sh

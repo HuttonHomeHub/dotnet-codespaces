@@ -9,14 +9,17 @@ PhotoMapper: a .NET 10 / .NET Aspire 13 solution with a Blazor Web App frontend 
 ## Commands
 
 ```bash
-aspire run                                    # run everything with hot reload (watch mode is on in aspire.config.json)
+scripts/run.sh                                # aspire run (hot reload, from aspire.config.json) with a guaranteed clean stop
+scripts/stop.sh                               # stop leftovers from any run and free the app's ports
 dotnet build PhotoMapper.slnx
 dotnet test --solution PhotoMapper.slnx       # tests run on Microsoft.Testing.Platform (global.json): no positional path
 dotnet test --solution PhotoMapper.slnx --filter-class "*WebFrontendTests"   # or --filter-method "*TestName"
 dotnet format PhotoMapper.slnx                # fix formatting; CI runs it with --verify-no-changes
 ```
 
-Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (Scalar UI at `/scalar` in Development), web 8081. These are set in each project's `Properties/launchSettings.json` and forwarded in `.devcontainer/devcontainer.json`, so change both together.
+Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (Scalar UI at `/scalar` in Development), web 8081. These are set in each project's `Properties/launchSettings.json` and forwarded in `.devcontainer/devcontainer.json`, so change both together; `scripts/stop.sh` reads its port list from the launchSettings files. All other ports are not auto-forwarded (`otherPortsAttributes`).
+
+Run and stop the app with the scripts (or the VS Code `run`/`stop` tasks; both F5 configurations run `stop` before and after debugging), not bare `aspire run`: if `aspire run`'s terminal is closed or it is killed, its `dotnet watch` process survives, keeps ports open and ignores SIGTERM, and the orphaned orchestrator (DCP) lingers for minutes. `stop.sh` kills only this repo's runs and DCPs whose AppHost is gone, so it is safe while integration tests run.
 
 ## Architecture
 
@@ -32,7 +35,7 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 
 ## Build conventions
 
-- Target framework, nullable, implicit usings, `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended` and `EnforceCodeStyleInBuild` live in `Directory.Build.props`; don't repeat them in `.csproj` files. Together these make `.editorconfig` rules set to `warning` (and recommended CA rules) fail the build.
+- Target framework, nullable, implicit usings, `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended` and `EnforceCodeStyleInBuild` live in `Directory.Build.props`; don't repeat them in `.csproj` files. Together these make `.editorconfig` rules set to `warning` (and recommended CA rules) fail the build, including unused usings (IDE0005, which is why `GenerateDocumentationFile` is on with CS1591 suppressed).
 - Package versions are central in `Directory.Packages.props`; `PackageReference` items have no `Version`.
 - Every project has a committed `packages.lock.json`. After changing a package, run `dotnet restore PhotoMapper.slnx` and commit the updated lock files; CI restores in locked mode (set in `Directory.Build.props` when `GITHUB_ACTIONS` is true) and fails on drift. NuGet audit fails restore on any known-vulnerable package, transitive ones included.
 - `nuget.config` restricts restore to nuget.org via package source mapping; adding another feed means adding a source and a mapping there.
@@ -44,5 +47,5 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 
 ## Repo and CI
 
-- `main` is protected by a ruleset (source of truth: `.github/rulesets/protect-main.json`): changes go through squash-merged PRs that must pass Build and Test, CodeQL (`Analyze (csharp)`, `Analyze (actions)`), Dependency Review and the Containers smoke test (`Build, smoke-test and publish images`). Renaming a workflow job breaks the required check, so update the ruleset with it.
+- `main` is protected by a ruleset (source of truth: `.github/rulesets/protect-main.json`): changes go through squash-merged PRs that must pass Build and Test, CodeQL (`Analyze (csharp)`, `Analyze (actions)`), Dependency Review, Lint (`Lint workflows and scripts`: actionlint and shellcheck) and the Containers smoke test (`Build, smoke-test and publish images`). Renaming a workflow job breaks the required check, so update the ruleset with it.
 - Actions are pinned to full commit SHAs with a `# vX.Y.Z` comment; Dependabot updates both. Dependabot waits 14 days before proposing new versions.
