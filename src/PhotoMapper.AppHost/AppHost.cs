@@ -78,6 +78,20 @@ var web = builder.AddProject<Projects.PhotoMapper_Web>("webfrontend")
         service.AddVolume(new Volume { Name = "webfrontend-home", Source = "webfrontend-home", Target = "/home/app", Type = "volume" });
     });
 
+// In GitHub Codespaces the browser reaches the web app through https://<codespace>-<port>.app.github.dev, while the
+// app sees localhost, so links in emails would point at localhost. Tell it the public address (see EmailOptions).
+// The integration tests run inside the codespace and follow links to localhost, so they set PublicEmailLinks=false.
+string? codespaceName = Environment.GetEnvironmentVariable("CODESPACE_NAME");
+string? forwardingDomain = Environment.GetEnvironmentVariable("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN");
+if (builder.ExecutionContext.IsRunMode
+    && !string.IsNullOrEmpty(codespaceName) && !string.IsNullOrEmpty(forwardingDomain)
+    && builder.Configuration.GetValue("PublicEmailLinks", defaultValue: true))
+{
+    EndpointReference webEndpoint = web.GetEndpoint("http");
+    web.WithEnvironment("Email__PublicBaseUrl",
+        ReferenceExpression.Create($"https://{codespaceName}-{webEndpoint.Property(EndpointProperty.Port)}.{forwardingDomain}"));
+}
+
 if (builder.ExecutionContext.IsPublishMode)
 {
     // Sender address for account emails; must be one the mail provider lets you send from.

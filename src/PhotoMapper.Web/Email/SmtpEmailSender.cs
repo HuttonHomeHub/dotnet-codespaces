@@ -24,19 +24,39 @@ internal sealed partial class SmtpEmailSender(
 
     // Identity's contract: the links passed in are already HTML-encoded (the account pages encode them), so they go
     // into the HTML part as they are and are decoded for the plain-text part.
-    public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink) =>
-        SendAsync(
+    public Task SendConfirmationLinkAsync(ApplicationUser user, string email, string confirmationLink)
+    {
+        confirmationLink = ToPublicLink(confirmationLink, options.Value.PublicBaseUrl);
+        return SendAsync(
             email,
             "Confirm your PhotoMapper account",
             $"Please confirm your PhotoMapper account by <a href=\"{confirmationLink}\">clicking here</a>.",
             $"Please confirm your PhotoMapper account by opening this link: {WebUtility.HtmlDecode(confirmationLink)}");
+    }
 
-    public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink) =>
-        SendAsync(
+    public Task SendPasswordResetLinkAsync(ApplicationUser user, string email, string resetLink)
+    {
+        resetLink = ToPublicLink(resetLink, options.Value.PublicBaseUrl);
+        return SendAsync(
             email,
             "Reset your PhotoMapper password",
             $"Reset your PhotoMapper password by <a href=\"{resetLink}\">clicking here</a>. If you didn't ask for this, you can ignore this email.",
             $"Reset your PhotoMapper password by opening this link: {WebUtility.HtmlDecode(resetLink)}\n\nIf you didn't ask for this, you can ignore this email.");
+    }
+
+    // Points an (HTML-encoded) link at localhost to the public address instead; other links are left alone.
+    internal static string ToPublicLink(string htmlEncodedLink, Uri? publicBaseUrl)
+    {
+        if (publicBaseUrl is null
+            || !Uri.TryCreate(WebUtility.HtmlDecode(htmlEncodedLink), UriKind.Absolute, out Uri? link)
+            || !link.IsLoopback)
+        {
+            return htmlEncodedLink;
+        }
+
+        UriBuilder rewritten = new(link) { Scheme = publicBaseUrl.Scheme, Host = publicBaseUrl.Host, Port = publicBaseUrl.Port };
+        return HtmlEncoder.Default.Encode(rewritten.Uri.AbsoluteUri);
+    }
 
     public Task SendPasswordResetCodeAsync(ApplicationUser user, string email, string resetCode) =>
         SendAsync(
