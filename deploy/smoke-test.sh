@@ -13,7 +13,8 @@ trap '"${compose[@]}" logs --no-color > smoke.log 2>&1 || true; "${compose[@]}" 
 
 base="http://localhost:$port"
 for _ in $(seq 60); do
-  curl --silent --output /dev/null "$base/" && break
+  # --fail: wait for the app itself, not just the proxy (which answers 502 until the app is listening).
+  curl --silent --fail --output /dev/null "$base/" && break
   sleep 1
 done
 
