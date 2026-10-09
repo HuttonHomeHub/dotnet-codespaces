@@ -40,6 +40,7 @@ Ports: Aspire dashboard 15051 (login token printed by `aspire run`), API 8080 (S
 - Container images are built by the .NET SDK (`dotnet publish -t:PublishContainer`), not Dockerfiles: `ContainerFamily` and the source label are in `Directory.Build.props`, `ContainerRepository` in each app's `.csproj`.
 - The AppHost uses `AspireUseCliBundle=true`, so builds of the AppHost need the Aspire CLI (`aspire`) on PATH (the container adds `~/.dotnet/tools`).
 - The SDK is pinned in `global.json`. Line endings are LF (`.gitattributes`, `.editorconfig`).
+- Codespaces keeps only `/workspaces` across container rebuilds, so `devcontainer.json` sets `CLAUDE_CONFIG_DIR=/workspaces/.claude-code`: Claude Code's chats, memory, settings and login live there (outside the repo) instead of `~/.claude`.
 
 ## Repo and CI
 
