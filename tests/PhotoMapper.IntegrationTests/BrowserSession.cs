@@ -17,6 +17,9 @@ public sealed partial class BrowserSession : IDisposable
         };
     }
 
+    // Sends these headers with every request, for example to look like the Codespaces forwarding proxy.
+    public void AddHeader(string name, string value) => _client.DefaultRequestHeaders.Add(name, value);
+
     public Task<HttpResponseMessage> GetAsync(string pathOrUrl) =>
         _client.GetAsync(new Uri(pathOrUrl, UriKind.RelativeOrAbsolute), TestContext.Current.CancellationToken);
 
