@@ -1,19 +1,60 @@
 @inherits LayoutComponentBase
 
-@* The sign-in screen: the public account pages (login, register, password reset...) in a centred card, without the
-   app's menu. Set for Account/Pages in its _Imports.razor; the signed-in Manage pages use ManageLayout instead. *@
+@* The sign-in screen for the public account pages (login, register, password reset...): a light brand panel and the
+   form, side by side; on small screens the panel shrinks to a header. Set for Account/Pages in its _Imports.razor; the
+   signed-in Manage pages use ManageLayout instead. Styles for the pages' content live in AccountLayout.razor.css. *@
 
-<div class="account-page">
-    <main class="account-card">
-        <a class="account-brand" href="">PhotoMapper</a>
-        @Body
+<div class="auth">
+    <aside class="auth-brand">
+        <a class="auth-logo" href="">
+            <svg class="auth-logo-mark" viewBox="0 0 32 32" aria-hidden="true">
+                <rect width="32" height="32" rx="9" fill="currentColor" />
+                <path d="M16 6.5c-4 0-7.2 3.1-7.2 7 0 5 7.2 11.6 7.2 11.6s7.2-6.6 7.2-11.6c0-3.9-3.2-7-7.2-7z" fill="#fff" />
+                <circle cx="16" cy="13.6" r="2.7" fill="currentColor" />
+            </svg>
+            PhotoMapper
+        </a>
+
+        <div class="auth-brand-copy">
+            <h2>Your photos, on the map.</h2>
+            <p>Every place you've been and the pictures you took there, together in one private map.</p>
+        </div>
+
+        <p class="auth-brand-note">Private by default &middot; Members are approved by an admin</p>
+
+        <svg class="auth-brand-art" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.35">
+                <path d="M-20 140c90-40 160 30 250 0s170-90 260-50 150 40 150 40" />
+                <path d="M-20 180c90-40 160 30 250 0s170-90 260-50 150 40 150 40" />
+                <path d="M-20 220c100-30 170 40 260 10s170-80 250-40 150 30 150 30" />
+                <path d="M-20 560c80 30 150-40 240-10s160 90 250 60 150-70 150-70" />
+                <path d="M-20 600c80 30 150-40 240-10s160 90 250 60 150-70 150-70" />
+                <path d="M-20 640c90 20 160-50 250-20s150 100 240 70 150-60 150-60" />
+                <ellipse cx="505" cy="265" rx="110" ry="62" />
+                <ellipse cx="505" cy="265" rx="72" ry="38" />
+                <ellipse cx="505" cy="265" rx="36" ry="17" />
+            </g>
+            <path d="M84 700c70-10 150-30 230-80s150-40 200-110 10-160 -10-230" fill="none" stroke="currentColor"
+                  stroke-width="3" stroke-dasharray="2 10" stroke-linecap="round" opacity="0.7" />
+            <g fill="currentColor">
+                <path d="M84 674c-8 0-14 6-14 13 0 10 14 23 14 23s14-13 14-23c0-7-6-13-14-13z" />
+                <path d="M314 594c-8 0-14 6-14 13 0 10 14 23 14 23s14-13 14-23c0-7-6-13-14-13z" opacity="0.85" />
+                <path d="M504 254c-8 0-14 6-14 13 0 10 14 23 14 23s14-13 14-23c0-7-6-13-14-13z" opacity="0.7" />
+            </g>
+        </svg>
+    </aside>
+
+    <main class="auth-main">
+        <div class="auth-panel">
+            @Body
+        </div>
+
+        <AuthorizeView>
+            <Authorized>
+                <a class="auth-back" href="">&larr; Back to PhotoMapper</a>
+            </Authorized>
+        </AuthorizeView>
     </main>
-
-    <AuthorizeView>
-        <Authorized>
-            <a class="account-back" href="">Back to PhotoMapper</a>
-        </Authorized>
-    </AuthorizeView>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

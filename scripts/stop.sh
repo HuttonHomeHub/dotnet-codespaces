@@ -86,7 +86,12 @@ if ((${#targets[@]} > 0)); then
   if ((${#targets[@]} > 0)); then
     say "Still running after SIGTERM, sending SIGKILL: ${targets[*]}"
     kill -KILL "${targets[@]}" 2>/dev/null || true
-    sleep 1
+    # Killed processes can take a moment to disappear; re-check rather than reporting them as still running.
+    for _ in $(seq 5); do
+      sleep 1
+      mapfile -t targets < <(find_targets)
+      ((${#targets[@]} == 0)) && break
+    done
   fi
 
   mapfile -t targets < <(find_targets)

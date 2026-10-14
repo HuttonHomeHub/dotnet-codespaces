@@ -4,8 +4,11 @@
 @* Changed from the template: the confirmation link is only ever emailed, and the page shows the same message
    whether or not the address has an account, so it can't be used to find out who is registered. *@
 
-<PageTitle>Register confirmation</PageTitle>
+<PageTitle>Check your email · PhotoMapper</PageTitle>
 
-<h1>Register confirmation</h1>
-
-<p role="alert">Please check your email to confirm your account. After that, an admin needs to approve it before you can sign in; you'll get an email when they have.</p>
+<div class="auth-result">
+    <AuthIcon Kind="AuthIconKind.Mail" />
+    <h1>Check your email</h1>
+    <p class="auth-lead" role="alert">Please check your email to confirm your account. After that, an admin needs to approve it before you can sign in; you'll get an email when they have.</p>
+    <a class="auth-submit" href="Account/Login">Back to sign in</a>
+</div>

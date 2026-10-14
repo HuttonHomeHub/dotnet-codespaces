@@ -14,12 +14,19 @@
 
 @* Changed from the template: explains the admin approval step, and tells the admins about the new account. *@
 
-<PageTitle>Confirm email</PageTitle>
+<PageTitle>Confirm email · PhotoMapper</PageTitle>
 
-<h1>Confirm email</h1>
-<StatusMessage Message="@statusMessage" />
+<div class="auth-result">
+    <AuthIcon Kind="@(statusMessage?.StartsWith("Error", StringComparison.Ordinal) == true ? AuthIconKind.Warning : AuthIconKind.Success)" />
+    <h1>Confirm email</h1>
+    <StatusMessage Message="@statusMessage" />
+    <a class="auth-submit" href="Account/Login">Go to sign in</a>
+</div>
 
 @code {
+    private const string InvalidLinkMessage =
+        "Error: This confirmation link isn't valid or has expired. You can ask for a new one from the sign-in page.";
+
     private string? statusMessage;
 
     [CascadingParameter]
@@ -42,8 +49,9 @@
         var user = await UserManager.FindByIdAsync(UserId);
         if (user is null)
         {
-            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-            statusMessage = $"Error loading user with ID {UserId}";
+            // Changed from the template: no 404 status (the not-found page needs sign-in, so the visitor would just be
+            // sent to the login page), and the same message as a wrong code, so it doesn't say which it was.
+            statusMessage = InvalidLinkMessage;
         }
         else
         {
@@ -52,7 +60,7 @@
             var result = await UserManager.ConfirmEmailAsync(user, code);
             if (!result.Succeeded)
             {
-                statusMessage = "Error confirming your email.";
+                statusMessage = InvalidLinkMessage;
             }
             else if (user.IsApproved)
             {
