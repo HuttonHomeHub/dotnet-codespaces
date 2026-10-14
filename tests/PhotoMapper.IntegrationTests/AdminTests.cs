@@ -57,7 +57,7 @@ public sealed class AdminTests(AppHostFixture fixture)
     public async Task AdminCanLockAndUnlockAnAccount()
     {
         using BrowserSession admin = await SignedInAdminAsync();
-        string target = await CreateConfirmedAccountAsync(fixture);
+        string target = await CreateApprovedAccountAsync(fixture);
         string targetId = await UserIdAsync(target);
 
         using HttpResponseMessage locked = await PostActionAsync(admin, targetId, "lock");

@@ -18,6 +18,8 @@ public sealed class AppHostFixture : IAsyncLifetime
     private static readonly TimeSpan StartupTimeout = TimeSpan.FromMinutes(5);
 
     private DistributedApplication? _app;
+    private readonly SemaphoreSlim _adminLock = new(1, 1);
+    private BrowserSession? _admin;
 
     private DistributedApplication App => _app ?? throw new InvalidOperationException("The app has not been started.");
 
@@ -54,6 +56,32 @@ public sealed class AppHostFixture : IAsyncLifetime
         return (process.ExitCode, output);
     }
 
+    // A signed-in admin shared by the tests, for approving accounts. Made once, with the real make-admin command.
+    public async Task<BrowserSession> GetAdminSessionAsync()
+    {
+        await _adminLock.WaitAsync(TestContext.Current.CancellationToken);
+        try
+        {
+            if (_admin is null)
+            {
+                string email = await AccountSteps.CreateConfirmedAccountAsync(this);
+                (int exitCode, string output) = await MakeAdminAsync(email);
+                Assert.True(exitCode == 0, output);
+
+                BrowserSession admin = CreateBrowserSession();
+                using HttpResponseMessage signedIn = await AccountSteps.SignInAsync(admin, email, AccountSteps.Password);
+                AccountSteps.AssertRedirectsTo(signedIn, "/");
+                _admin = admin;
+            }
+
+            return _admin;
+        }
+        finally
+        {
+            _adminLock.Release();
+        }
+    }
+
     public async ValueTask InitializeAsync()
     {
         using CancellationTokenSource timeout = new(StartupTimeout);
@@ -77,6 +105,9 @@ public sealed class AppHostFixture : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
+        _admin?.Dispose();
+        _adminLock.Dispose();
+
         if (_app is not null)
         {
             await _app.DisposeAsync();

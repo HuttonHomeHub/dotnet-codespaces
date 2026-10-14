@@ -29,6 +29,13 @@ internal static class MakeAdminCommand
             return 1;
         }
 
+        // Admins are approved too, so the first admin can sign in without anyone to approve them.
+        if (!user.IsApproved)
+        {
+            user.IsApproved = true;
+            await userManager.UpdateAsync(user);
+        }
+
         if (await userManager.IsInRoleAsync(user, AppRoles.Admin))
         {
             await output.WriteLineAsync($"{email} is already an admin.");

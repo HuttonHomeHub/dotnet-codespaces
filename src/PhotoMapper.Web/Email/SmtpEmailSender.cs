@@ -45,9 +45,10 @@ internal sealed partial class SmtpEmailSender(
             $"Your PhotoMapper password reset code is: {HtmlEncoder.Default.Encode(resetCode)}",
             $"Your PhotoMapper password reset code is: {resetCode}");
 
-    // Failures are logged, not thrown: the account pages then carry on (the user can ask for the email again)
-    // instead of showing an error page after the account was already created.
-    private async Task SendAsync(string to, string subject, string htmlBody, string textBody)
+    // Sends any email: Identity's account emails above, and AccountNotifications. Failures are logged, not thrown:
+    // the account pages then carry on (the user can ask for the email again) instead of showing an error page after
+    // the account was already created.
+    internal async Task SendAsync(string to, string subject, string htmlBody, string textBody)
     {
         using MimeMessage message = new();
         message.From.Add(MailboxAddress.Parse(options.Value.From));

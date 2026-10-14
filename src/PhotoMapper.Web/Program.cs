@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
@@ -55,8 +56,14 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddSignInManager()
+    .AddSignInManager<ApprovalSignInManager>()
     .AddDefaultTokenProviders();
+
+// Sign-in gate: every page and endpoint requires a signed-in user unless it opts out with [AllowAnonymous] (only
+// the account pages needed to get in, the error page, static files and health checks). New pages are protected
+// automatically.
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 // Sign-in cookies are re-checked against the database every minute (default 30), so when an admin locks, deletes
 // or demotes a user, that user's sessions end promptly. Admin actions update the security stamp to trigger this.
@@ -67,7 +74,9 @@ string mailConnectionString = builder.Configuration.GetConnectionString("mail")
     ?? throw new InvalidOperationException("Connection string 'mail' is missing; the AppHost provides it.");
 builder.Services.AddSingleton(SmtpSettings.Parse(mailConnectionString, allowUnencrypted: builder.Environment.IsDevelopment()));
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
-builder.Services.AddSingleton<IEmailSender<ApplicationUser>, SmtpEmailSender>();
+builder.Services.AddSingleton<SmtpEmailSender>();
+builder.Services.AddSingleton<IEmailSender<ApplicationUser>>(services => services.GetRequiredService<SmtpEmailSender>());
+builder.Services.AddScoped<AccountNotifications>();
 
 var app = builder.Build();
 
@@ -87,12 +96,13 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 
 app.UseAntiforgery();
 
-app.MapStaticAssets();
+// Public: the sign-in pages need the stylesheets and scripts.
+app.MapStaticAssets().AllowAnonymous();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Endpoints the account pages post to (logout, passkeys, external logins, personal data download).
+// Endpoints the account pages post to (logout, personal data download).
 app.MapAdditionalIdentityEndpoints();
 app.MapAdminUserEndpoints();
 

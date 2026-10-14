@@ -8,7 +8,7 @@ namespace PhotoMapper.IntegrationTests;
 public sealed class AccountTests(AppHostFixture fixture)
 {
     [Fact]
-    public async Task NewAccountCanSignInOnlyAfterConfirmingEmail()
+    public async Task NewAccountCanSignInOnlyOnceConfirmedAndApproved()
     {
         string email = NewEmail();
         using BrowserSession browser = fixture.CreateBrowserSession();
@@ -18,15 +18,18 @@ public sealed class AccountTests(AppHostFixture fixture)
         AssertRedirectsTo(registered, "/Account/RegisterConfirmation");
 
         using HttpResponseMessage beforeConfirming = await SignInAsync(browser, email, Password);
-        Assert.Equal(HttpStatusCode.OK, beforeConfirming.StatusCode);
-        Assert.Contains("Invalid login attempt", await ReadAsync(beforeConfirming), StringComparison.Ordinal);
+        Assert.Contains("Confirm your email address first", await ReadAsync(beforeConfirming), StringComparison.Ordinal);
 
         string confirmationLink = await inbox.WaitForLinkAsync(email, ConfirmationSubject);
-        Assert.Contains("Thank you for confirming your email", await browser.GetStringAsync(confirmationLink), StringComparison.Ordinal);
+        Assert.Contains("An admin needs to approve your account", await browser.GetStringAsync(confirmationLink), StringComparison.Ordinal);
+
+        using HttpResponseMessage beforeApproval = await SignInAsync(browser, email, Password);
+        Assert.Contains("waiting for an admin to approve it", await ReadAsync(beforeApproval), StringComparison.Ordinal);
+
+        await ApproveAsync(fixture, email);
 
         using HttpResponseMessage signedIn = await SignInAsync(browser, email, Password);
         AssertRedirectsTo(signedIn, "/");
-
         using HttpResponseMessage manage = await browser.GetAsync("/Account/Manage");
         Assert.Equal(HttpStatusCode.OK, manage.StatusCode);
     }
@@ -34,7 +37,7 @@ public sealed class AccountTests(AppHostFixture fixture)
     [Fact]
     public async Task PasswordResetEmailLetsUserChooseANewPassword()
     {
-        string email = await CreateConfirmedAccountAsync(fixture);
+        string email = await CreateApprovedAccountAsync(fixture);
         const string newPassword = "N3w-Secret!pw";
         using BrowserSession browser = fixture.CreateBrowserSession();
         using MailpitInbox inbox = fixture.CreateMailpitInbox();
@@ -76,7 +79,7 @@ public sealed class AccountTests(AppHostFixture fixture)
     [Fact]
     public async Task RepeatedWrongPasswordsLockTheAccount()
     {
-        string email = await CreateConfirmedAccountAsync(fixture);
+        string email = await CreateApprovedAccountAsync(fixture);
         using BrowserSession browser = fixture.CreateBrowserSession();
 
         // Identity's default: the fifth failed attempt locks the account for five minutes.
@@ -157,6 +160,6 @@ public sealed class AccountTests(AppHostFixture fixture)
 
         Assert.Contains("Error confirming your email", await browser.GetStringAsync(tampered), StringComparison.Ordinal);
         using HttpResponseMessage signIn = await SignInAsync(browser, email, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(signIn), StringComparison.Ordinal);
+        Assert.Contains("Confirm your email address first", await ReadAsync(signIn), StringComparison.Ordinal);
     }
 }

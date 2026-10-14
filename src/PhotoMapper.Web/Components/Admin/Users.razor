@@ -18,6 +18,17 @@
 
 <StatusMessage />
 
+@if (pendingCount > 0)
+{
+    <p>
+        <a href="admin/users?status=pending" class="btn btn-sm btn-warning">@pendingCount waiting for approval</a>
+        @if (Status == "pending")
+        {
+            <a href="admin/users" class="btn btn-sm btn-link">Show all users</a>
+        }
+    </p>
+}
+
 <form method="get" class="row g-2 mb-3" role="search">
     <div class="col-sm-8 col-md-6">
         <input type="search" name="q" value="@Q" class="form-control" placeholder="Search by email" aria-label="Search by email" />
@@ -54,7 +65,7 @@ else
                         <td>@user.Email</td>
                         <td>@user.CreatedAt.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</td>
                         <td>@(user.EmailConfirmed ? "Yes" : "No")</td>
-                        <td>@(isLocked ? "Locked" : "Active")</td>
+                        <td>@(isLocked ? "Locked" : user.IsApproved ? "Active" : "Waiting for approval")</td>
                         <td>@(isAdmin ? "Yes" : "No")</td>
                         <td class="text-nowrap">
                             @if (user.Id == currentUserId)
@@ -63,6 +74,14 @@ else
                             }
                             else
                             {
+                                @if (!user.IsApproved)
+                                {
+                                    <form method="post" action="@($"admin/users/{user.Id}/approve")" class="d-inline">
+                                        <AntiforgeryToken />
+                                        <input type="hidden" name="returnUrl" value="@currentPage" />
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                }
                                 <form method="post" action="@($"admin/users/{user.Id}/{(isLocked ? "unlock" : "lock")}")" class="d-inline">
                                     <AntiforgeryToken />
                                     <input type="hidden" name="returnUrl" value="@currentPage" />
@@ -104,12 +123,17 @@ else
     private string currentPage = "/admin/users";
     private int total;
     private int pageCount = 1;
+    private int pendingCount;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromQuery]
     private string? Q { get; set; }
+
+    // "pending": only accounts waiting for approval.
+    [SupplyParameterFromQuery]
+    private string? Status { get; set; }
 
     [SupplyParameterFromQuery(Name = "page")]
     private int Page { get; set; }
@@ -126,6 +150,13 @@ else
             query = query.Where(user => user.NormalizedEmail != null && user.NormalizedEmail.Contains(search));
         }
 
+        if (Status == "pending")
+        {
+            query = query.Where(user => !user.IsApproved);
+        }
+
+        pendingCount = await UserManager.Users.CountAsync(user => !user.IsApproved);
+
         total = await query.CountAsync();
         pageCount = Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
         Page = Math.Clamp(Page, 1, pageCount);
@@ -140,5 +171,5 @@ else
     }
 
     private string PageLink(int page) =>
-        NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?> { ["page"] = page, ["q"] = Q });
+        NavigationManager.GetUriWithQueryParameters(new Dictionary<string, object?> { ["page"] = page, ["q"] = Q, ["status"] = Status });
 }

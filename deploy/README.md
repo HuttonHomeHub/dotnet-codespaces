@@ -45,7 +45,7 @@ docker compose --env-file .env --env-file site.env -f docker-compose.yaml -f com
   run --rm --no-deps migrations make-admin you@example.com
 ```
 
-Sign in again (or wait a minute) and a **Users** link appears in the menu. From there admins can make other users admins, so you only need this once. The command refuses accounts that don't exist or haven't confirmed their email.
+This also approves the account. Sign in and a **Users** link appears in the menu. From there admins approve new accounts (they get an email when someone is waiting) and can make other users admins, so you only need this command once. It refuses accounts that don't exist or haven't confirmed their email.
 
 ## Deploy or update
 

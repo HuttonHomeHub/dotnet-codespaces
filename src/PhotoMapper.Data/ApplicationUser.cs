@@ -8,4 +8,7 @@ public class ApplicationUser : IdentityUser
     // Set by the database when the account is created.
     [PersonalData]
     public DateTimeOffset CreatedAt { get; set; }
+
+    // New accounts can't sign in until an admin approves them (on /admin/users, or by making them an admin).
+    public bool IsApproved { get; set; }
 }

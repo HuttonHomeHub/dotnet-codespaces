@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+
+@* The sign-in screen: the public account pages (login, register, password reset...) in a centred card, without the
+   app's menu. Set for Account/Pages in its _Imports.razor; the signed-in Manage pages use ManageLayout instead. *@
+
+<div class="account-page">
+    <main class="account-card">
+        <a class="account-brand" href="">PhotoMapper</a>
+        @Body
+    </main>
+
+    <AuthorizeView>
+        <Authorized>
+            <a class="account-back" href="">Back to PhotoMapper</a>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

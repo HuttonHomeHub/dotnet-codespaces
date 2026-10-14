@@ -1,0 +1,64 @@
+.account-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 1rem;
+    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+.account-card {
+    width: 100%;
+    max-width: 30rem;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+}
+
+.account-brand {
+    display: block;
+    margin-bottom: 1.25rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    color: rgb(5, 39, 103);
+}
+
+.account-back {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* The account pages lay themselves out in Bootstrap columns sized for a full page; in the card they take its width. */
+.account-card ::deep .row > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.account-card ::deep h1 {
+    font-size: 1.5rem;
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }

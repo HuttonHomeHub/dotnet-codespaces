@@ -11,11 +11,11 @@ public sealed partial class MailpitInbox(Uri baseAddress) : IDisposable
     private readonly HttpClient _client = new() { BaseAddress = baseAddress };
 
     // Waits for the newest email to `to` whose subject contains `subject`, and returns the first link in its text part.
-    // Pass `skipping` (a link already seen) to wait for a newer email.
-    public async Task<string> WaitForLinkAsync(string to, string subject, string? skipping = null)
+    // Pass `skipping` (a link already seen) to wait for a newer email, or `containing` to match text in the email.
+    public async Task<string> WaitForLinkAsync(string to, string subject, string? skipping = null, string? containing = null)
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
-        string query = Uri.EscapeDataString($"to:\"{to}\" subject:\"{subject}\"");
+        string query = Uri.EscapeDataString($"to:\"{to}\" subject:\"{subject}\"" + (containing is null ? "" : $" \"{containing}\""));
         DateTime deadline = DateTime.UtcNow + Timeout;
 
         while (true)
