@@ -22,6 +22,19 @@ public sealed class CodespacesProxyTests(AppHostFixture fixture)
     }
 
     [Fact]
+    public async Task SignedOutRedirectToSignInUsesThePublicAddress()
+    {
+        // The redirect to the login page comes from the authorization middleware, so this also checks it runs after
+        // the forwarded headers are applied.
+        using BrowserSession browser = ThroughProxy(PublicHost);
+
+        using HttpResponseMessage response = await browser.GetAsync("/Account/Manage");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.StartsWith($"https://{PublicHost}/Account/Login?", response.Headers.Location?.AbsoluteUri, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task EmailLinksUseThePublicAddress()
     {
         string email = NewEmail();

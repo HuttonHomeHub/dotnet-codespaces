@@ -94,6 +94,11 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
+// Explicit so they run after UseForwardedHeaders: left implicit, WebApplication adds them at the start of the
+// pipeline, and the "please sign in" redirect was then built with the localhost address in Codespaces.
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseAntiforgery();
 
 // Public: the sign-in pages need the stylesheets and scripts.

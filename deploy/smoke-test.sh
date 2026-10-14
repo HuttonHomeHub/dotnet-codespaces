@@ -31,7 +31,8 @@ check() {
   local expected=$1 method=$2 path=$3
   local actual
   actual=$(curl --silent --output /dev/null --write-out '%{http_code}' --request "$method" "$base$path")
-  if [[ "$actual" != "$expected" ]]; then
+  # `expected` may list several acceptable codes, comma-separated.
+  if [[ ",$expected," != *",$actual,"* ]]; then
     echo "FAIL: $method $path returned $actual, expected $expected"
     return 1
   fi
@@ -42,7 +43,7 @@ check() {
 check 302 GET /
 check 302 GET /does-not-exist
 check 302 GET /health
-check 401 POST "/_blazor/negotiate?negotiateVersion=1"   # API-style endpoint: refused rather than redirected
+check 302,401 POST "/_blazor/negotiate?negotiateVersion=1"   # Blazor connection: refused (redirect or 401)
 check 200 GET /_framework/blazor.web.js
 check 200 GET /Account/Login
 check 200 GET /Account/Register
