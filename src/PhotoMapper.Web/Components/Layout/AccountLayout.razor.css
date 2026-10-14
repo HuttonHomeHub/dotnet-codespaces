@@ -17,7 +17,8 @@
     --auth-radius: 0.625rem;
 
     display: grid;
-    grid-template-columns: minmax(22rem, 5fr) minmax(0, 7fr);
+    /* The brand panel stops growing on very wide screens, so the form side keeps its share. */
+    grid-template-columns: minmax(22rem, min(42%, 44rem)) minmax(0, 1fr);
     min-height: 100vh;
     /* Named system fonts (as GitHub does) rather than system-ui, which some Linux setups map to a font without bold. */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -79,6 +80,7 @@
 }
 
 .auth-brand-copy h2 {
+    text-shadow: 0 0 6px #e9f7f4, 0 0 14px #e9f7f4;
     margin: 0 0 0.75rem;
     font-size: clamp(1.75rem, 2.6vw, 2.4rem);
     font-weight: 700;
@@ -88,6 +90,9 @@
 }
 
 .auth-brand-copy p {
+    max-width: 24rem;
+    /* A halo in the panel colour, as map labels have, keeps the text clear where the route passes behind it. */
+    text-shadow: 0 0 4px #e9f7f4, 0 0 10px #e9f7f4, 0 0 16px #e9f7f4;
     margin: 0;
     font-size: 1.05rem;
     line-height: 1.6;
@@ -139,6 +144,14 @@
     margin: 0 0 1.75rem;
     color: var(--auth-muted);
     line-height: 1.55;
+    text-wrap: pretty;
+}
+
+.auth-panel ::deep .auth-hint {
+    margin: 0.4rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--auth-muted);
 }
 
 .auth-panel ::deep .auth-field {
@@ -166,7 +179,8 @@
 .auth-panel ::deep .form-control {
     height: 2.75rem;
     padding: 0.5rem 0.85rem;
-    font-size: 0.975rem;
+    /* At least 16px: iOS Safari zooms the page when a smaller field is focused. */
+    font-size: 1rem;
     color: var(--auth-text);
     border: 1px solid #cbd5e1;
     border-radius: var(--auth-radius);
@@ -257,6 +271,7 @@
     font-size: 0.925rem;
     text-align: center;
     color: var(--auth-muted);
+    text-wrap: balance;
 }
 
 .auth-panel ::deep .auth-alt + .auth-alt {
@@ -355,8 +370,14 @@
     }
 
     .auth-main {
-        justify-content: flex-start;
         padding: 2.25rem 1.25rem;
+    }
+}
+
+/* Phones: the form starts near the top (tablets keep it vertically centred). */
+@media (max-width: 600px) {
+    .auth-main {
+        justify-content: flex-start;
     }
 }
 

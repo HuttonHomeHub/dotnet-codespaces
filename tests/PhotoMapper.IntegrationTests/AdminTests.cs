@@ -117,7 +117,7 @@ public sealed class AdminTests(AppHostFixture fixture)
 
         using BrowserSession gone = fixture.CreateBrowserSession();
         using HttpResponseMessage signIn = await SignInAsync(gone, target, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(signIn), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(signIn), StringComparison.Ordinal);
     }
 
     [Fact]
