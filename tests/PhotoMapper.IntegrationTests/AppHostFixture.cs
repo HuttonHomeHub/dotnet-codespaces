@@ -60,9 +60,9 @@ public sealed class AppHostFixture : IAsyncLifetime
         CancellationToken cancellationToken = timeout.Token;
 
         // UseVolumes=false: an empty database for every test run, separate from the development database.
-        // PublicEmailLinks=false: in Codespaces, keep email links on localhost, which is where these tests run.
+        // CodespacesForwardingDomain: trust X-Forwarded-Host for *.app.github.dev, as in Codespaces, also in CI.
         IDistributedApplicationTestingBuilder appHost = await DistributedApplicationTestingBuilder.CreateAsync<Projects.PhotoMapper_AppHost>(
-            ["UseVolumes=false", "PublicEmailLinks=false"], cancellationToken);
+            ["UseVolumes=false", "CodespacesForwardingDomain=app.github.dev"], cancellationToken);
         appHost.Services.ConfigureHttpClientDefaults(clientBuilder => clientBuilder.AddStandardResilienceHandler());
 
         _app = await appHost.BuildAsync(cancellationToken);

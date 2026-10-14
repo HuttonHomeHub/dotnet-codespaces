@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 
 using PhotoMapper.Data;
@@ -11,6 +12,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+
+// GitHub Codespaces (development only): the browser uses https://<codespace>-<port>.<domain>, the app sees localhost.
+// The forwarding proxy connects from inside the codespace and sends the public address in X-Forwarded-Host/Proto;
+// trusting them (from loopback only, the default, and only for that domain) makes redirects and email links use it.
+string? codespacesDomain = builder.Configuration["Codespaces:ForwardingDomain"];
+bool behindCodespacesProxy = builder.Environment.IsDevelopment() && !string.IsNullOrEmpty(codespacesDomain);
+if (behindCodespacesProxy)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedHost | ForwardedHeaders.XForwardedProto;
+        options.AllowedHosts = [$"*.{codespacesDomain}"];
+    });
+}
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -55,6 +70,11 @@ builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, SmtpEmailSender>();
 
 var app = builder.Build();
+
+if (behindCodespacesProxy)
+{
+    app.UseForwardedHeaders();
+}
 
 if (!app.Environment.IsDevelopment())
 {
