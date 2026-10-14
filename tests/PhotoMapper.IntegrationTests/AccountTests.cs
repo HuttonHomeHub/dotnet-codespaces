@@ -119,6 +119,18 @@ public sealed class AccountTests(AppHostFixture fixture)
     }
 
     [Fact]
+    public async Task ConfirmationLinkForAnUnknownAccountExplainsItIsInvalid()
+    {
+        // Shown on the page, not as a 404 (which would send a signed-out visitor to the login page instead).
+        using BrowserSession browser = fixture.CreateBrowserSession();
+
+        using HttpResponseMessage response = await browser.GetAsync("/Account/ConfirmEmail?userId=no-such-user&code=bm90LXRoZS1jb2Rl");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("This confirmation link isn", await ReadAsync(response), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ResendingConfirmationSendsAWorkingLink()
     {
         string email = NewEmail();
@@ -158,7 +170,7 @@ public sealed class AccountTests(AppHostFixture fixture)
         // A well-formed but wrong code: base64url of "not-the-code".
         string tampered = Regex.Replace(link, "code=[^&]+", "code=bm90LXRoZS1jb2Rl");
 
-        Assert.Contains("Error confirming your email", await browser.GetStringAsync(tampered), StringComparison.Ordinal);
+        Assert.Contains("This confirmation link isn", await browser.GetStringAsync(tampered), StringComparison.Ordinal);
         using HttpResponseMessage signIn = await SignInAsync(browser, email, Password);
         Assert.Contains("Confirm your email address first", await ReadAsync(signIn), StringComparison.Ordinal);
     }

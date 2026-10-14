@@ -1,8 +1,11 @@
 @page "/Account/InvalidUser"
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 
-<PageTitle>Invalid user</PageTitle>
+<PageTitle>Account not found · PhotoMapper</PageTitle>
 
-<h3>Invalid user</h3>
-
-<StatusMessage />
+<div class="auth-result">
+    <AuthIcon Kind="AuthIconKind.Warning" />
+    <h1>Account not found</h1>
+    <StatusMessage />
+    <a class="auth-submit" href="Account/Login">Back to sign in</a>
+</div>

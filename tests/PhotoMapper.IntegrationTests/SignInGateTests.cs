@@ -35,7 +35,7 @@ public sealed class SignInGateTests(AppHostFixture fixture)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         string page = await ReadAsync(response);
-        Assert.Contains("account-card", page, StringComparison.Ordinal);
+        Assert.Contains("class=\"auth-panel\"", page, StringComparison.Ordinal);
         Assert.DoesNotContain("class=\"sidebar\"", page, StringComparison.Ordinal);
     }
 
@@ -62,7 +62,7 @@ public sealed class SignInGateTests(AppHostFixture fixture)
         string page = await browser.GetStringAsync("/Account/Manage");
 
         Assert.Contains("class=\"sidebar\"", page, StringComparison.Ordinal);
-        Assert.DoesNotContain("account-card", page, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"auth-panel\"", page, StringComparison.Ordinal);
     }
 
     [Fact]

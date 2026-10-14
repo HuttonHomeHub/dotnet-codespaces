@@ -1,45 +1,363 @@
-.account-page {
+/* Sign-in screens. Light design; the accent colour is set once here (--auth-accent*). Rules for the pages' own markup
+   use ::deep because the pages are separate components. */
+
+.auth {
+    --auth-accent: #0f766e;
+    --auth-accent-hover: #115e59;
+    --auth-accent-soft: #ccfbf1;
+    --auth-accent-tint: #f0fdfa;
+    --auth-text: #0f172a;
+    --auth-muted: #64748b;
+    --auth-border: #e2e8f0;
+    --auth-surface: #ffffff;
+    --auth-danger: #b91c1c;
+    --auth-danger-soft: #fef2f2;
+    --auth-success: #047857;
+    --auth-success-soft: #ecfdf5;
+    --auth-radius: 0.625rem;
+
+    display: grid;
+    grid-template-columns: minmax(22rem, 5fr) minmax(0, 7fr);
     min-height: 100vh;
+    /* Named system fonts (as GitHub does) rather than system-ui, which some Linux setups map to a font without bold. */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--auth-text);
+    background: var(--auth-surface);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Brand panel */
+
+.auth-brand {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 2.5rem 3rem;
+    overflow: hidden;
+    color: var(--auth-text);
+    background: linear-gradient(160deg, var(--auth-accent-tint) 0%, #e6f6f3 55%, #dff3ef 100%);
+    border-right: 1px solid var(--auth-border);
+}
+
+.auth-brand-art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: var(--auth-accent);
+    pointer-events: none;
+}
+
+.auth-logo,
+.auth-brand-copy,
+.auth-brand-note {
+    position: relative;
+    z-index: 1;
+}
+
+.auth-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    color: var(--auth-text);
+    text-decoration: none;
+}
+
+.auth-logo-mark {
+    width: 2rem;
+    height: 2rem;
+    color: var(--auth-accent);
+}
+
+.auth-brand-copy {
+    max-width: 28rem;
+}
+
+.auth-brand-copy h2 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.75rem, 2.6vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.auth-brand-copy p {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.auth-brand-note {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--auth-muted);
+}
+
+/* Form side */
+
+.auth-main {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
-    padding: 2rem 1rem;
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    gap: 1.5rem;
+    padding: 3rem 1.5rem;
 }
 
-.account-card {
+.auth-panel {
     width: 100%;
-    max-width: 30rem;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 0.75rem;
-    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.25);
+    max-width: 24rem;
 }
 
-.account-brand {
-    display: block;
-    margin-bottom: 1.25rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    text-align: center;
+.auth-back {
+    font-size: 0.9rem;
+    color: var(--auth-muted);
     text-decoration: none;
-    color: rgb(5, 39, 103);
 }
 
-.account-back {
-    color: rgba(255, 255, 255, 0.85);
+.auth-back:hover {
+    color: var(--auth-accent);
 }
 
-/* The account pages lay themselves out in Bootstrap columns sized for a full page; in the card they take its width. */
-.account-card ::deep .row > [class*="col-"] {
-    flex: 0 0 100%;
-    max-width: 100%;
+/* Page content (the account pages' markup) */
+
+.auth-panel ::deep h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
 }
 
-.account-card ::deep h1 {
-    font-size: 1.5rem;
+.auth-panel ::deep .auth-lead {
+    margin: 0 0 1.75rem;
+    color: var(--auth-muted);
+    line-height: 1.55;
+}
+
+.auth-panel ::deep .auth-field {
+    margin-bottom: 1.1rem;
+}
+
+.auth-panel ::deep .auth-field label,
+.auth-panel ::deep .auth-label-row label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.auth-panel ::deep .auth-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.auth-panel ::deep .auth-label-row a {
+    font-size: 0.85rem;
+}
+
+.auth-panel ::deep .form-control {
+    height: 2.75rem;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.975rem;
+    color: var(--auth-text);
+    border: 1px solid #cbd5e1;
+    border-radius: var(--auth-radius);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.auth-panel ::deep .form-control::placeholder {
+    color: #94a3b8;
+}
+
+.auth-panel ::deep .form-control:focus {
+    border-color: var(--auth-accent);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+}
+
+.auth-panel ::deep .form-control.invalid {
+    border-color: var(--auth-danger);
+}
+
+.auth-panel ::deep .validation-message {
+    margin-top: 0.35rem;
+    font-size: 0.825rem;
+    color: var(--auth-danger);
+}
+
+.auth-panel ::deep .auth-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0.1rem 0 1.4rem;
+    font-size: 0.925rem;
+    color: #334155;
+    cursor: pointer;
+}
+
+.auth-panel ::deep .auth-check .form-check-input {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0;
+    border-color: #94a3b8;
+}
+
+.auth-panel ::deep .form-check-input:checked {
+    background-color: var(--auth-accent);
+    border-color: var(--auth-accent);
+}
+
+.auth-panel ::deep .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+}
+
+.auth-panel ::deep .auth-submit {
+    width: 100%;
+    height: 2.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--auth-accent);
+    border: 0;
+    border-radius: var(--auth-radius);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+    transition: background-color 0.15s;
+}
+
+.auth-panel ::deep .auth-submit:hover {
+    background: var(--auth-accent-hover);
+}
+
+.auth-panel ::deep .auth-submit:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.3);
+}
+
+.auth-panel ::deep a {
+    font-weight: 500;
+    color: var(--auth-accent);
+    text-decoration: none;
+}
+
+.auth-panel ::deep a:hover {
+    color: var(--auth-accent-hover);
+    text-decoration: underline;
+}
+
+.auth-panel ::deep .auth-alt {
+    margin: 1.5rem 0 0;
+    font-size: 0.925rem;
+    text-align: center;
+    color: var(--auth-muted);
+}
+
+.auth-panel ::deep .auth-alt + .auth-alt {
+    margin-top: 0.5rem;
+}
+
+/* Status messages (StatusMessage component) */
+
+.auth-panel ::deep .alert {
+    margin-bottom: 1.25rem;
+    padding: 0.75rem 0.95rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    border-radius: var(--auth-radius);
+}
+
+.auth-panel ::deep .alert-danger {
+    color: var(--auth-danger);
+    background: var(--auth-danger-soft);
+    border: 1px solid #fecaca;
+}
+
+.auth-panel ::deep .alert-success {
+    color: var(--auth-success);
+    background: var(--auth-success-soft);
+    border: 1px solid #a7f3d0;
+}
+
+/* Message pages (AuthIcon + heading + text) */
+
+.auth-panel ::deep .auth-result {
+    text-align: center;
+}
+
+.auth-panel ::deep .auth-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin-bottom: 1.25rem;
+    border-radius: 50%;
+}
+
+.auth-panel ::deep .auth-icon svg {
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.auth-panel ::deep .auth-icon-mail,
+.auth-panel ::deep .auth-icon-success {
+    color: var(--auth-accent);
+    background: var(--auth-accent-soft);
+}
+
+.auth-panel ::deep .auth-icon-lock,
+.auth-panel ::deep .auth-icon-warning {
+    color: var(--auth-danger);
+    background: var(--auth-danger-soft);
+}
+
+.auth-panel ::deep .auth-result .auth-lead {
+    margin-bottom: 1.5rem;
+}
+
+.auth-panel ::deep .auth-result .auth-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+/* Small screens: the brand panel becomes a slim header */
+
+@media (max-width: 860px) {
+    .auth {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+    }
+
+    .auth-brand {
+        padding: 1.1rem 1.5rem;
+        border-right: 0;
+        border-bottom: 1px solid var(--auth-border);
+    }
+
+    .auth-brand-copy,
+    .auth-brand-note,
+    .auth-brand-art {
+        display: none;
+    }
+
+    .auth-main {
+        justify-content: flex-start;
+        padding: 2.25rem 1.25rem;
+    }
 }
 
 #blazor-error-ui {
