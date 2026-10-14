@@ -12,7 +12,7 @@ public sealed class CodespacesProxyTests(AppHostFixture fixture)
     [Fact]
     public async Task SigningInRedirectsToThePublicAddress()
     {
-        string email = await CreateConfirmedAccountAsync(fixture);
+        string email = await CreateApprovedAccountAsync(fixture);
         using BrowserSession browser = ThroughProxy(PublicHost);
 
         using HttpResponseMessage signedIn = await SignInAsync(browser, email, Password);
@@ -38,7 +38,7 @@ public sealed class CodespacesProxyTests(AppHostFixture fixture)
     public async Task ForwardedHostsOutsideTheCodespacesDomainAreIgnored()
     {
         // Otherwise anyone could make the app put their own host name into password reset links.
-        string email = await CreateConfirmedAccountAsync(fixture);
+        string email = await CreateApprovedAccountAsync(fixture);
         using BrowserSession browser = ThroughProxy("evil.example.com");
 
         using HttpResponseMessage signedIn = await SignInAsync(browser, email, Password);

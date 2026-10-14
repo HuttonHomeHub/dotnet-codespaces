@@ -1,4 +1,5 @@
 @page "/Account/Login"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
@@ -6,12 +7,13 @@
 @using PhotoMapper.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-@* Changed from the template: email and password only (no passkeys, external logins or two-factor), and failed
-   passwords count towards lockout. *@
+@* Changed from the template: email and password only (no passkeys, external logins or two-factor), failed
+   passwords count towards lockout, and accounts that can't sign in yet are told why (once the password is right). *@
 
 <PageTitle>Log in</PageTitle>
 
@@ -98,9 +100,42 @@
             Logger.LogWarning("User account locked out.");
             RedirectManager.RedirectTo("Account/Lockout");
         }
+        else if (result.IsNotAllowed)
+        {
+            await ExplainNotAllowedAsync();
+        }
         else
         {
             errorMessage = "Error: Invalid login attempt.";
+        }
+    }
+
+    // Identity refuses unconfirmed or unapproved accounts before it checks the password, and doesn't count those
+    // attempts towards lockout. So only say why once the password is right; a wrong one counts as a failed attempt
+    // and gets the usual message. Otherwise this would reveal which addresses have accounts and allow unlimited guessing.
+    private async Task ExplainNotAllowedAsync()
+    {
+        ApplicationUser? user = await UserManager.FindByEmailAsync(Input.Email);
+        if (user is not null && await UserManager.IsLockedOutAsync(user))
+        {
+            RedirectManager.RedirectTo("Account/Lockout");
+        }
+        else if (user is null || !await UserManager.CheckPasswordAsync(user, Input.Password))
+        {
+            if (user is not null)
+            {
+                await UserManager.AccessFailedAsync(user);
+            }
+
+            errorMessage = "Error: Invalid login attempt.";
+        }
+        else if (!user.EmailConfirmed)
+        {
+            errorMessage = "Error: Confirm your email address first, using the link we emailed you (or resend it below).";
+        }
+        else
+        {
+            errorMessage = "Error: Your account is waiting for an admin to approve it. You'll get an email when you can sign in.";
         }
     }
 

@@ -1,8 +1,10 @@
+using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 using PhotoMapper.Data;
 using PhotoMapper.Web.Components.Account;
+using PhotoMapper.Web.Email;
 
 namespace PhotoMapper.Web.Components.Admin;
 
@@ -17,6 +19,21 @@ internal static partial class AdminUserEndpoints
 
         RouteGroupBuilder users = endpoints.MapGroup("/admin/users")
             .RequireAuthorization(policy => policy.RequireRole(AppRoles.Admin));
+
+        users.MapPost("/{id}/approve", (string id, [FromForm] string? returnUrl, HttpContext context, UserManager<ApplicationUser> userManager, AccountNotifications notifications, ILogger<Marker> logger) =>
+            ChangeAsync(id, returnUrl, context, userManager, async user =>
+            {
+                if (user.IsApproved)
+                {
+                    return $"{user.Email} is already approved.";
+                }
+
+                user.IsApproved = true;
+                await userManager.UpdateAsync(user);
+                LogAction(logger, "approved", user.Id, userManager.GetUserId(context.User));
+                await notifications.AccountApprovedAsync(user, SignInLink(context));
+                return $"{user.Email} is approved and has been emailed.";
+            }));
 
         users.MapPost("/{id}/lock", (string id, [FromForm] string? returnUrl, HttpContext context, UserManager<ApplicationUser> userManager, ILogger<Marker> logger) =>
             ChangeAsync(id, returnUrl, context, userManager, async user =>
@@ -41,6 +58,13 @@ internal static partial class AdminUserEndpoints
         users.MapPost("/{id}/grant-admin", (string id, [FromForm] string? returnUrl, HttpContext context, UserManager<ApplicationUser> userManager, ILogger<Marker> logger) =>
             ChangeAsync(id, returnUrl, context, userManager, async user =>
             {
+                // An admin who couldn't sign in would be no use: making someone an admin approves them too.
+                if (!user.IsApproved)
+                {
+                    user.IsApproved = true;
+                    await userManager.UpdateAsync(user);
+                }
+
                 await userManager.AddToRoleAsync(user, AppRoles.Admin);
                 LogAction(logger, "made admin", user.Id, userManager.GetUserId(context.User));
                 return $"{user.Email} is now an admin (from their next sign-in, or within a minute).";
@@ -70,6 +94,10 @@ internal static partial class AdminUserEndpoints
 
         return users;
     }
+
+    // Absolute, from the current request, so it uses the address people reach the app by.
+    private static Uri SignInLink(HttpContext context) =>
+        new(UriHelper.BuildAbsolute(context.Request.Scheme, context.Request.Host, context.Request.PathBase, "/Account/Login"));
 
     private static async Task<IResult> ChangeAsync(
         string id,

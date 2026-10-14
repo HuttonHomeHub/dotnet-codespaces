@@ -1,4 +1,5 @@
 @page "/Account/RegisterConfirmation"
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 
 @* Changed from the template: the confirmation link is only ever emailed, and the page shows the same message
    whether or not the address has an account, so it can't be used to find out who is registered. *@
@@ -7,4 +8,4 @@
 
 <h1>Register confirmation</h1>
 
-<p role="alert">Please check your email to confirm your account.</p>
+<p role="alert">Please check your email to confirm your account. After that, an admin needs to approve it before you can sign in; you'll get an email when they have.</p>

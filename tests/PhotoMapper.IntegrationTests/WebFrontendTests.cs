@@ -1,24 +1,32 @@
+using static PhotoMapper.IntegrationTests.AccountSteps;
+
 namespace PhotoMapper.IntegrationTests;
 
 public sealed class WebFrontendTests(AppHostFixture fixture)
 {
-    private readonly HttpClient _client = fixture.CreateHttpClient(AppHostFixture.WebFrontend);
-
     [Fact]
-    public async Task HomePageReturnsOk()
+    public async Task HomePageNeedsSignIn()
     {
-        HttpResponseMessage response = await _client.GetAsync(new Uri("/", UriKind.Relative), TestContext.Current.CancellationToken);
+        using BrowserSession anonymous = fixture.CreateBrowserSession();
+        using HttpResponseMessage signedOut = await anonymous.GetAsync("/");
+        AssertRedirectsTo(signedOut, "/Account/Login");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("<h1>PhotoMapper</h1>", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        (BrowserSession browser, _) = await SignedInAsync(fixture);
+        using BrowserSession session = browser;
+        using HttpResponseMessage home = await browser.GetAsync("/");
+        Assert.Equal(HttpStatusCode.OK, home.StatusCode);
+        Assert.Contains("<h1>PhotoMapper</h1>", await ReadAsync(home), StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task UnknownPageReturnsNotFoundPage()
+    public async Task UnknownPageShowsNotFoundPageWhenSignedIn()
     {
-        HttpResponseMessage response = await _client.GetAsync(new Uri("/does-not-exist", UriKind.Relative), TestContext.Current.CancellationToken);
+        (BrowserSession browser, _) = await SignedInAsync(fixture);
+        using BrowserSession session = browser;
+
+        using HttpResponseMessage response = await browser.GetAsync("/does-not-exist");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Contains("<h1>Not found</h1>", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
+        Assert.Contains("<h1>Not found</h1>", await ReadAsync(response), StringComparison.Ordinal);
     }
 }

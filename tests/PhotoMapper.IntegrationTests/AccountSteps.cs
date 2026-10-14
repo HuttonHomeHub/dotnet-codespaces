@@ -25,7 +25,7 @@ internal static partial class AccountSteps
             ["Input.Password"] = password,
         });
 
-    // Registers and confirms a new account; returns its email address.
+    // Registers and confirms a new account (still waiting for approval); returns its email address.
     public static async Task<string> CreateConfirmedAccountAsync(AppHostFixture fixture)
     {
         string email = NewEmail();
@@ -40,10 +40,31 @@ internal static partial class AccountSteps
         return email;
     }
 
-    // A new confirmed account, signed in. Dispose the returned session.
-    public static async Task<(BrowserSession Browser, string Email)> SignedInAsync(AppHostFixture fixture)
+    // Approves an account the way an admin does: the Approve button on the user management page.
+    public static async Task ApproveAsync(AppHostFixture fixture, string email)
+    {
+        BrowserSession admin = await fixture.GetAdminSessionAsync();
+        string page = await admin.GetStringAsync($"/admin/users?q={Uri.EscapeDataString(email)}");
+        Match approve = Regex.Match(page, "action=\"admin/users/([0-9a-f-]{36})/approve\"");
+        Assert.True(approve.Success, $"No Approve button for {email}.");
+
+        using HttpResponseMessage approved = await admin.SubmitFormAsync("/admin/users", handler: null,
+            new Dictionary<string, string> { ["returnUrl"] = "/admin/users" }, action: $"/admin/users/{approve.Groups[1].Value}/approve");
+        AssertRedirectsTo(approved, "/admin/users");
+    }
+
+    // Registers, confirms and approves a new account, so it can sign in; returns its email address.
+    public static async Task<string> CreateApprovedAccountAsync(AppHostFixture fixture)
     {
         string email = await CreateConfirmedAccountAsync(fixture);
+        await ApproveAsync(fixture, email);
+        return email;
+    }
+
+    // A new approved account, signed in. Dispose the returned session.
+    public static async Task<(BrowserSession Browser, string Email)> SignedInAsync(AppHostFixture fixture)
+    {
+        string email = await CreateApprovedAccountAsync(fixture);
         BrowserSession browser = fixture.CreateBrowserSession();
         using HttpResponseMessage signedIn = await SignInAsync(browser, email, Password);
         AssertRedirectsTo(signedIn, "/");

@@ -38,12 +38,14 @@ check() {
   echo "ok:   $method $path -> $actual"
 }
 
-check 200 GET /
-check 404 GET /does-not-exist
+# Signed out, everything except the sign-in pages and static files needs sign-in (pages redirect to it).
+check 302 GET /
+check 302 GET /does-not-exist
+check 302 GET /health
+check 401 POST "/_blazor/negotiate?negotiateVersion=1"   # API-style endpoint: refused rather than redirected
 check 200 GET /_framework/blazor.web.js
-check 200 POST "/_blazor/negotiate?negotiateVersion=1"
-check 404 GET /health
 check 200 GET /Account/Login
+check 200 GET /Account/Register
 
 # Registering only redirects to the confirmation page once the account is saved, so this proves the migrations
 # ran and the web app can write to PostgreSQL. (Sending the email fails here, which the app logs and survives.)
