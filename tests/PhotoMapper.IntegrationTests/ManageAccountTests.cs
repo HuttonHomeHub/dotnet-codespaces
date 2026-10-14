@@ -32,7 +32,7 @@ public sealed class ManageAccountTests(AppHostFixture fixture)
 
         using BrowserSession other = fixture.CreateBrowserSession();
         using HttpResponseMessage oldPassword = await SignInAsync(other, email, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(oldPassword), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(oldPassword), StringComparison.Ordinal);
         using HttpResponseMessage signedIn = await SignInAsync(other, email, newPassword);
         AssertRedirectsTo(signedIn, "/");
     }
@@ -52,13 +52,13 @@ public sealed class ManageAccountTests(AppHostFixture fixture)
         // Until the new address is confirmed, the account still signs in with the old one.
         using BrowserSession other = fixture.CreateBrowserSession();
         using HttpResponseMessage newBeforeConfirming = await SignInAsync(other, newEmail, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(newBeforeConfirming), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(newBeforeConfirming), StringComparison.Ordinal);
 
         string link = await inbox.WaitForLinkAsync(newEmail, ConfirmationSubject);
         Assert.Contains("Thank you for confirming your email change", await browser.GetStringAsync(link), StringComparison.Ordinal);
 
         using HttpResponseMessage oldEmail = await SignInAsync(other, email, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(oldEmail), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(oldEmail), StringComparison.Ordinal);
         using HttpResponseMessage signedIn = await SignInAsync(other, newEmail, Password);
         AssertRedirectsTo(signedIn, "/");
     }
@@ -94,7 +94,7 @@ public sealed class ManageAccountTests(AppHostFixture fixture)
 
         using BrowserSession other = fixture.CreateBrowserSession();
         using HttpResponseMessage signIn = await SignInAsync(other, email, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(signIn), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(signIn), StringComparison.Ordinal);
     }
 
     [Fact]

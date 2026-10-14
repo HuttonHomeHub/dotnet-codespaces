@@ -59,7 +59,7 @@ public sealed class AccountTests(AppHostFixture fixture)
         AssertRedirectsTo(reset, "/Account/ResetPasswordConfirmation");
 
         using HttpResponseMessage oldPassword = await SignInAsync(browser, email, Password);
-        Assert.Contains("Invalid login attempt", await ReadAsync(oldPassword), StringComparison.Ordinal);
+        Assert.Contains("Incorrect email or password", await ReadAsync(oldPassword), StringComparison.Ordinal);
 
         using HttpResponseMessage signedIn = await SignInAsync(browser, email, newPassword);
         AssertRedirectsTo(signedIn, "/");
@@ -86,7 +86,7 @@ public sealed class AccountTests(AppHostFixture fixture)
         for (int attempt = 1; attempt <= 4; attempt++)
         {
             using HttpResponseMessage failed = await SignInAsync(browser, email, "Wrong-Passw0rd!");
-            Assert.Contains("Invalid login attempt", await ReadAsync(failed), StringComparison.Ordinal);
+            Assert.Contains("Incorrect email or password", await ReadAsync(failed), StringComparison.Ordinal);
         }
 
         using HttpResponseMessage fifthFailure = await SignInAsync(browser, email, "Wrong-Passw0rd!");

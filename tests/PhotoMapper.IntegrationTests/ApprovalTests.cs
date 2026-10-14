@@ -55,7 +55,7 @@ public sealed class ApprovalTests(AppHostFixture fixture)
         {
             using HttpResponseMessage failed = await SignInAsync(browser, email, "Wrong-Passw0rd!");
             string page = await ReadAsync(failed);
-            Assert.Contains("Invalid login attempt", page, StringComparison.Ordinal);
+            Assert.Contains("Incorrect email or password", page, StringComparison.Ordinal);
             Assert.DoesNotContain("waiting for an admin", page, StringComparison.Ordinal);
         }
 
